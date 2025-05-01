@@ -31,8 +31,11 @@ android {
     }
 }
 
-dependencies {
 
+
+dependencies {
+    implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation ("com.android.volley:volley:1.2.1")
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)

@@ -76,8 +76,8 @@ public class RegisterActivity extends AppCompatActivity {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("email", email);
-        values.put("password", password); // İsteğe bağlı: Hash ile sakla
-        values.put("balance", 0); // Başlangıç bakiyesi 0 TL
+        values.put("password", password);
+        values.put("balance", 0);
         long result = db.insert("User", null, values);
         return result != -1;
     }

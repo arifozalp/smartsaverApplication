@@ -1,6 +1,7 @@
 package com.example.smartsaver.database;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
@@ -22,8 +23,8 @@ public class DBHelper extends SQLiteOpenHelper {
                 "password TEXT," +
                 "balance REAL DEFAULT 0)");
 
-        // Para transferleri tablosu
-        db.execSQL("CREATE TABLE Transaction (" +
+        // Para transferleri tablosu (isim değiştirildi)
+        db.execSQL("CREATE TABLE MoneyTransfer (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "sender_id INTEGER," +
                 "receiver_email TEXT," +
@@ -39,7 +40,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 "profit REAL," +
                 "date TEXT)");
 
-        // Hisse senedi bilgileri (statik veya JSON'dan alınan verilerle doldurulabilir)
+        // Hisse senedi bilgileri
         db.execSQL("CREATE TABLE Stock (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "code TEXT," +
@@ -48,7 +49,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 "long_term_change REAL," +
                 "quarterly_status TEXT)");
 
-        // Yatırım öneri geçmişi (opsiyonel)
+        // Yatırım öneri geçmişi
         db.execSQL("CREATE TABLE SuggestionHistory (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "user_id INTEGER," +
@@ -57,11 +58,22 @@ public class DBHelper extends SQLiteOpenHelper {
                 "recommendation TEXT)");
     }
 
+
+    public double getBalance(String email) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        double balance = 0;
+        Cursor cursor = db.rawQuery("SELECT balance FROM User WHERE email = ?", new String[]{email});
+        if (cursor.moveToFirst()) {
+            balance = cursor.getDouble(0);
+        }
+        cursor.close();
+        return balance;
+    }
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // Sürüm güncellemesi durumunda tabloları sıfırla (geliştirme aşamasında)
         db.execSQL("DROP TABLE IF EXISTS User");
-        db.execSQL("DROP TABLE IF EXISTS Transaction");
+        db.execSQL("DROP TABLE IF EXISTS MoneyTransfer"); // eski adı değil, yeni adı!
         db.execSQL("DROP TABLE IF EXISTS Investment");
         db.execSQL("DROP TABLE IF EXISTS Stock");
         db.execSQL("DROP TABLE IF EXISTS SuggestionHistory");
