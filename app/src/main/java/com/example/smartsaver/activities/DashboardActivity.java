@@ -1,25 +1,26 @@
 package com.example.smartsaver.activities;
 
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.smartsaver.R;
-import com.example.smartsaver.database.DBHelper;
 
 public class DashboardActivity extends AppCompatActivity {
 
     private TextView welcomeText, balanceText;
     private Button btnTransfer, btnSmartPlan, btnStocks, btnMyStats;
 
-    private DBHelper dbHelper;
+    private int userId;
     private String userEmail;
-    private double userBalance;
+    private final String BASE_URL = "http://10.0.2.2:3000/users/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,25 +34,28 @@ public class DashboardActivity extends AppCompatActivity {
         btnStocks = findViewById(R.id.btnStocks);
         btnMyStats = findViewById(R.id.btnMyStats);
 
-        dbHelper = new DBHelper(this);
-
-        // Email bilgisi LoginActivity'den gelir
+        // Login ekranından gelen kullanıcı bilgileri
+        userId = getIntent().getIntExtra("user_id", -1); // kullanıcı ID'si taşınmalı
         userEmail = getIntent().getStringExtra("user_email");
+
         welcomeText.setText("Welcome, " + userEmail);
 
-        // Veritabanından bakiye çek
-        userBalance = getBalance(userEmail);
-        balanceText.setText("Balance: ₺" + String.format("%.2f", userBalance));
+        if (userId != -1) {
+            fetchUserData(userId);
+        } else {
+            Toast.makeText(this, "Kullanıcı bilgisi alınamadı", Toast.LENGTH_SHORT).show();
+        }
 
-        // Buton tıklamaları
         btnTransfer.setOnClickListener(v -> {
             Intent intent = new Intent(this, TransferActivity.class);
+            intent.putExtra("user_id", userId);
             intent.putExtra("user_email", userEmail);
             startActivity(intent);
         });
 
         btnSmartPlan.setOnClickListener(v -> {
             Intent intent = new Intent(this, SmartPlanActivity.class);
+            intent.putExtra("user_id", userId);
             intent.putExtra("user_email", userEmail);
             startActivity(intent);
         });
@@ -63,19 +67,29 @@ public class DashboardActivity extends AppCompatActivity {
 
         btnMyStats.setOnClickListener(v -> {
             Intent intent = new Intent(this, MyStatsActivity.class);
-            intent.putExtra("user_email", userEmail);
+            intent.putExtra("user_id", userId);
             startActivity(intent);
         });
     }
 
-    private double getBalance(String email) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT balance FROM User WHERE email=?", new String[]{email});
-        double balance = 0;
-        if (cursor.moveToFirst()) {
-            balance = cursor.getDouble(0);
-        }
-        cursor.close();
-        return balance;
+    private void fetchUserData(int id) {
+        String url = BASE_URL + id;
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    try {
+                        String email = response.getString("email");
+                        double balance = response.getDouble("balance");
+
+                        welcomeText.setText("Welcome, " + email);
+                        balanceText.setText("Balance: ₺" + String.format("%.2f", balance));
+                    } catch (Exception e) {
+                        Toast.makeText(this, "JSON çözümleme hatası", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> Toast.makeText(this, "Sunucu bağlantı hatası", Toast.LENGTH_SHORT).show()
+        );
+
+        Volley.newRequestQueue(this).add(request);
     }
 }

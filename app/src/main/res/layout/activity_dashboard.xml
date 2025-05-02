@@ -3,8 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:background="@android:color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -12,23 +12,25 @@
         android:orientation="vertical"
         android:gravity="center_horizontal">
 
-        <!-- Hoş geldiniz ve bakiye bilgisi -->
+        <!-- Hoş geldiniz mesajı -->
         <TextView
             android:id="@+id/welcomeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Welcome, User"
-            android:textSize="20sp"
+            android:textSize="22sp"
             android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="8dp"
+            android:textColor="@android:color/black" />
 
+        <!-- Bakiye bilgisi -->
         <TextView
             android:id="@+id/balanceText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Balance: ₺0.00"
-            android:textSize="18sp"
-            android:textColor="@color/colorPrimaryDark"
+            android:textSize="20sp"
+            android:textColor="?android:attr/textColorPrimary"
             android:layout_marginBottom="24dp" />
 
         <!-- Para Transferi -->
@@ -37,7 +39,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Transfer Money"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="16dp"
+            android:backgroundTint="?attr/colorPrimary"
+            android:textColor="@android:color/white" />
 
         <!-- Akıllı Planlama -->
         <Button
@@ -45,7 +49,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Create Investment Plan"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="16dp"
+            android:backgroundTint="?attr/colorPrimary"
+            android:textColor="@android:color/white" />
 
         <!-- Hisse Senetleri -->
         <Button
@@ -53,14 +59,18 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="View Stocks"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="16dp"
+            android:backgroundTint="?attr/colorPrimary"
+            android:textColor="@android:color/white" />
 
         <!-- İstatistikler -->
         <Button
             android:id="@+id/btnMyStats"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="My Stats" />
+            android:text="My Stats"
+            android:backgroundTint="?attr/colorPrimary"
+            android:textColor="@android:color/white" />
 
     </LinearLayout>
 </ScrollView>
