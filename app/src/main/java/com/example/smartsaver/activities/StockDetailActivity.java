@@ -16,17 +16,19 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 
-import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class StockDetailActivity extends AppCompatActivity {
 
     private TextView stockSymbol, stockPrice, stockChange;
     private LineChart lineChart;
-    private final String API_KEY = "d09uahpr01qus8rffsfgd09uahpr01qus8rffsg0";
+
+    private final String API_KEY = "9UHXBHGRB85774EZ";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,56 +43,41 @@ public class StockDetailActivity extends AppCompatActivity {
         String symbol = getIntent().getStringExtra("stock_code");
         stockSymbol.setText(symbol);
 
-        fetchQuoteData(symbol);
-        fetchCandleData(symbol);
+        fetchStockData(symbol);
     }
 
-    private void fetchQuoteData(String symbol) {
-        String url = "https://finnhub.io/api/v1/quote?symbol=" + symbol + "&token=" + API_KEY;
+    private void fetchStockData(String symbol) {
+        String url = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=" + symbol + "&apikey=" + API_KEY;
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
                     try {
-                        double current = response.getDouble("c");
-                        double open = response.getDouble("o");
-                        double change = ((current - open) / open) * 100;
+                        JSONObject timeSeries = response.getJSONObject("Time Series (Daily)");
+                        Iterator<String> dates = timeSeries.keys();
 
-                        stockPrice.setText("Price: ₺" + String.format("%.2f", current));
-                        stockChange.setText("Change: " + String.format("%.2f", change) + "%");
-                    } catch (JSONException e) {
-                        Toast.makeText(this, "Price data error", Toast.LENGTH_SHORT).show();
-                    }
-                },
-                error -> Toast.makeText(this, "Price fetch failed", Toast.LENGTH_SHORT).show());
-
-        Volley.newRequestQueue(this).add(request);
-    }
-
-    private void fetchCandleData(String symbol) {
-        // Şu anki zaman (UTC olarak bugünün 00:00:00)
-        long to = System.currentTimeMillis() / 1000;
-        long from = to - (7 * 24 * 60 * 60); // 7 gün önce
-
-        String url = "https://finnhub.io/api/v1/stock/candle?symbol=" + symbol +
-                "&resolution=D&from=" + from + "&to=" + to + "&token=" + API_KEY;
-
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
-                response -> {
-                    try {
-                        if (!response.has("c") || response.getJSONArray("c").length() == 0) {
-                            Toast.makeText(this, "No candle data available", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-
-                        JSONArray closes = response.getJSONArray("c");
                         List<Entry> entries = new ArrayList<>();
+                        List<Float> closePrices = new ArrayList<>();
+                        int index = 0;
 
-                        for (int i = 0; i < closes.length(); i++) {
-                            float value = (float) closes.getDouble(i);
-                            entries.add(new Entry(i, value));
+                        while (dates.hasNext() && index < 7) { // Son 7 gün
+                            String date = dates.next();
+                            JSONObject dayData = timeSeries.getJSONObject(date);
+                            float close = Float.parseFloat(dayData.getString("4. close"));
+                            entries.add(new Entry(index, close));
+                            closePrices.add(close);
+                            index++;
                         }
 
-                        LineDataSet dataSet = new LineDataSet(entries, "7-Day Trend");
+                        if (closePrices.size() >= 2) {
+                            float last = closePrices.get(0);
+                            float previous = closePrices.get(1);
+                            float change = ((last - previous) / previous) * 100;
+
+                            stockPrice.setText("Price: $" + String.format("%.2f", last));
+                            stockChange.setText("Change: " + String.format("%.2f", change) + "%");
+                        }
+
+                        LineDataSet dataSet = new LineDataSet(entries, "Last 7 Days");
                         dataSet.setColor(getResources().getColor(R.color.colorPrimary));
                         dataSet.setCircleRadius(3f);
                         dataSet.setValueTextSize(10f);
@@ -102,12 +89,13 @@ public class StockDetailActivity extends AppCompatActivity {
                         lineChart.invalidate();
 
                     } catch (JSONException e) {
-                        Toast.makeText(this, "Chart JSON error", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Data parse error", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
                     }
                 },
-                error -> Toast.makeText(this, "Chart fetch error", Toast.LENGTH_SHORT).show());
+                error -> Toast.makeText(this, "API error", Toast.LENGTH_SHORT).show()
+        );
 
         Volley.newRequestQueue(this).add(request);
     }
-
 }
