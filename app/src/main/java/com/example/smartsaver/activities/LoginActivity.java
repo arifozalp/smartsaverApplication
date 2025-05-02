@@ -1,8 +1,6 @@
 package com.example.smartsaver.activities;
 
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.Button;
@@ -12,8 +10,15 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.smartsaver.R;
-import com.example.smartsaver.database.DBHelper;
+
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -21,7 +26,7 @@ public class LoginActivity extends AppCompatActivity {
     private Button loginButton;
     private TextView registerRedirect;
 
-    private DBHelper dbHelper;
+    private final String BASE_URL = "http://10.0.2.2:3000";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,8 +38,6 @@ public class LoginActivity extends AppCompatActivity {
         loginButton = findViewById(R.id.loginButton);
         registerRedirect = findViewById(R.id.registerRedirect);
 
-        dbHelper = new DBHelper(this);
-
         loginButton.setOnClickListener(v -> {
             String email = emailInput.getText().toString().trim();
             String password = passwordInput.getText().toString().trim();
@@ -44,15 +47,7 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
 
-            if (validateLogin(email, password)) {
-                Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(this, DashboardActivity.class);
-                intent.putExtra("user_email", email);
-                startActivity(intent);
-                finish();
-            } else {
-                Toast.makeText(this, "Invalid credentials", Toast.LENGTH_SHORT).show();
-            }
+            validateLogin(email, password);
         });
 
         registerRedirect.setOnClickListener(v -> {
@@ -61,19 +56,38 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    private boolean validateLogin(String email, String password) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cursor = db.query(
-                "User",
-                null,
-                "email=? AND password=?",
-                new String[]{email, password},
-                null,
-                null,
-                null
-        );
-        boolean valid = cursor.getCount() > 0;
-        cursor.close();
-        return valid;
+    private void validateLogin(String email, String password) {
+        String url = BASE_URL + "/login";
+
+        StringRequest request = new StringRequest(Request.Method.POST, url,
+                response -> {
+                    try {
+                        JSONObject json = new JSONObject(response);
+                        int userId = json.getInt("id");
+                        String userEmail = json.getString("email");
+
+                        Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(this, DashboardActivity.class);
+                        intent.putExtra("user_id", userId);
+                        intent.putExtra("user_email", userEmail);
+                        startActivity(intent);
+                        finish();
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Login parse error", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> {
+                    Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();
+                }) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("email", email);
+                params.put("password", password);
+                return params;
+            }
+        };
+
+        Volley.newRequestQueue(this).add(request);
     }
 }

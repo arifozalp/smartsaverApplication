@@ -1,9 +1,7 @@
+// RegisterActivity.java
 package com.example.smartsaver.activities;
 
-import android.content.ContentValues;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.Button;
@@ -13,16 +11,23 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.smartsaver.R;
-import com.example.smartsaver.database.DBHelper;
+
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    private EditText emailInput, passwordInput, confirmPasswordInput;
+    private EditText emailInput, passwordInput, confirmPasswordInput, fullNameInput;
     private Button registerButton;
     private TextView loginRedirect;
 
-    private DBHelper dbHelper;
+    private final String BASE_URL = "http://10.0.2.2:3000";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,17 +37,17 @@ public class RegisterActivity extends AppCompatActivity {
         emailInput = findViewById(R.id.emailInput);
         passwordInput = findViewById(R.id.passwordInput);
         confirmPasswordInput = findViewById(R.id.confirmPasswordInput);
+        fullNameInput = findViewById(R.id.fullNameInput);
         registerButton = findViewById(R.id.registerButton);
         loginRedirect = findViewById(R.id.loginRedirect);
-
-        dbHelper = new DBHelper(this);
 
         registerButton.setOnClickListener(v -> {
             String email = emailInput.getText().toString().trim();
             String password = passwordInput.getText().toString().trim();
             String confirmPassword = confirmPasswordInput.getText().toString().trim();
+            String fullName = fullNameInput.getText().toString().trim();
 
-            if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password) || TextUtils.isEmpty(confirmPassword)) {
+            if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password) || TextUtils.isEmpty(confirmPassword) || TextUtils.isEmpty(fullName)) {
                 Toast.makeText(this, "All fields are required", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -52,18 +57,7 @@ public class RegisterActivity extends AppCompatActivity {
                 return;
             }
 
-            if (userExists(email)) {
-                Toast.makeText(this, "User already exists", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            if (registerUser(email, password)) {
-                Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(this, LoginActivity.class));
-                finish();
-            } else {
-                Toast.makeText(this, "Registration failed", Toast.LENGTH_SHORT).show();
-            }
+            registerUser(email, password, fullName);
         });
 
         loginRedirect.setOnClickListener(v -> {
@@ -72,21 +66,39 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
-    private boolean registerUser(String email, String password) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("email", email);
-        values.put("password", password);
-        values.put("balance", 0);
-        long result = db.insert("User", null, values);
-        return result != -1;
-    }
+    private void registerUser(String email, String password, String fullName) {
+        String url = BASE_URL + "/register";
 
-    private boolean userExists(String email) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cursor = db.query("User", null, "email=?", new String[]{email}, null, null, null);
-        boolean exists = cursor.getCount() > 0;
-        cursor.close();
-        return exists;
+        StringRequest request = new StringRequest(Request.Method.POST, url,
+                response -> {
+                    Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(this, LoginActivity.class));
+                    finish();
+                },
+                error -> {
+                    error.printStackTrace(); // Konsola yaz
+
+                    if (error.networkResponse != null && error.networkResponse.data != null) {
+                        String errorMsg = new String(error.networkResponse.data);
+                        Toast.makeText(this, "Hata: " + errorMsg, Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(this, "Sunucuya erişilemedi", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+
+
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("email", email);
+                params.put("password", password);
+                params.put("full_name", fullName);
+                return params;
+            }
+        };
+
+        Volley.newRequestQueue(this).add(request);
     }
 }
