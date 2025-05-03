@@ -1,4 +1,3 @@
-// RegisterActivity.java
 package com.example.smartsaver.activities;
 
 import android.content.Intent;
@@ -16,14 +15,12 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.smartsaver.R;
 
-import org.json.JSONObject;
-
 import java.util.HashMap;
 import java.util.Map;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    private EditText emailInput, passwordInput, confirmPasswordInput, fullNameInput;
+    private EditText emailInput, passwordInput, fullNameInput;
     private Button registerButton;
     private TextView loginRedirect;
 
@@ -34,26 +31,20 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
+        // ID'lere göre eşleşme yapıyoruz
+        fullNameInput = findViewById(R.id.nameInput);
         emailInput = findViewById(R.id.emailInput);
         passwordInput = findViewById(R.id.passwordInput);
-        confirmPasswordInput = findViewById(R.id.confirmPasswordInput);
-        fullNameInput = findViewById(R.id.fullNameInput);
         registerButton = findViewById(R.id.registerButton);
         loginRedirect = findViewById(R.id.loginRedirect);
 
         registerButton.setOnClickListener(v -> {
+            String fullName = fullNameInput.getText().toString().trim();
             String email = emailInput.getText().toString().trim();
             String password = passwordInput.getText().toString().trim();
-            String confirmPassword = confirmPasswordInput.getText().toString().trim();
-            String fullName = fullNameInput.getText().toString().trim();
 
-            if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password) || TextUtils.isEmpty(confirmPassword) || TextUtils.isEmpty(fullName)) {
+            if (TextUtils.isEmpty(fullName) || TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
                 Toast.makeText(this, "All fields are required", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            if (!password.equals(confirmPassword)) {
-                Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -76,8 +67,7 @@ public class RegisterActivity extends AppCompatActivity {
                     finish();
                 },
                 error -> {
-                    error.printStackTrace(); // Konsola yaz
-
+                    error.printStackTrace();
                     if (error.networkResponse != null && error.networkResponse.data != null) {
                         String errorMsg = new String(error.networkResponse.data);
                         Toast.makeText(this, "Hata: " + errorMsg, Toast.LENGTH_LONG).show();
@@ -85,9 +75,6 @@ public class RegisterActivity extends AppCompatActivity {
                         Toast.makeText(this, "Sunucuya erişilemedi", Toast.LENGTH_SHORT).show();
                     }
                 }
-
-
-
         ) {
             @Override
             protected Map<String, String> getParams() {

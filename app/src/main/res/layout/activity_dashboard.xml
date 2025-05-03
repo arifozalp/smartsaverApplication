@@ -3,8 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp"
-    android:background="@android:color/white">
+    android:background="@drawable/login_bg"
+    android:padding="24dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -12,65 +12,177 @@
         android:orientation="vertical"
         android:gravity="center_horizontal">
 
-        <!-- Hoş geldiniz mesajı -->
+        <!-- Karşılama -->
         <TextView
             android:id="@+id/welcomeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Welcome, User"
+            android:textColor="@android:color/white"
             android:textSize="22sp"
             android:textStyle="bold"
-            android:layout_marginBottom="8dp"
-            android:textColor="@android:color/black" />
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp" />
 
-        <!-- Bakiye bilgisi -->
-        <TextView
-            android:id="@+id/balanceText"
+        <!-- Bakiye -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Balance: ₺0.00"
-            android:textSize="20sp"
-            android:textColor="?android:attr/textColorPrimary"
-            android:layout_marginBottom="24dp" />
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginBottom="24dp">
 
-        <!-- Para Transferi -->
-        <Button
-            android:id="@+id/btnTransfer"
+            <ImageView
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:src="@drawable/balance"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/balanceText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Balance: ₺0.00"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
+        </LinearLayout>
+
+
+        <!-- Üstteki 2 buton -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Transfer Money"
-            android:layout_marginBottom="16dp"
-            android:backgroundTint="?attr/colorPrimary"
-            android:textColor="@android:color/white" />
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="32dp">
 
-        <!-- Akıllı Planlama -->
-        <Button
-            android:id="@+id/btnSmartPlan"
+            <LinearLayout
+                android:id="@+id/btnTransfer"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:backgroundTint="#3A8DFF"
+                android:background="@drawable/card_bg"
+                android:padding="16dp"
+                android:elevation="6dp"
+                android:layout_marginEnd="8dp"
+                android:foreground="?attr/selectableItemBackground">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/transfer_money" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Transfer"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp"
+                    android:layout_marginTop="8dp"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/btnSmartPlan"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:backgroundTint="#3A8DFF"
+                android:background="@drawable/card_bg"
+                android:padding="16dp"
+                android:elevation="6dp"
+                android:layout_marginStart="8dp"
+                android:foreground="?attr/selectableItemBackground">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/create_investment_plan" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Smart Plan"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp"
+                    android:layout_marginTop="8dp"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Logo -->
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/logo_turtle"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Alttaki 2 buton -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Create Investment Plan"
-            android:layout_marginBottom="16dp"
-            android:backgroundTint="?attr/colorPrimary"
-            android:textColor="@android:color/white" />
+            android:orientation="horizontal"
+            android:gravity="center">
 
-        <!-- Hisse Senetleri -->
-        <Button
-            android:id="@+id/btnStocks"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="View Stocks"
-            android:layout_marginBottom="16dp"
-            android:backgroundTint="?attr/colorPrimary"
-            android:textColor="@android:color/white" />
+            <LinearLayout
+                android:id="@+id/btnStocks"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:backgroundTint="#3A8DFF"
+                android:background="@drawable/card_bg"
+                android:padding="16dp"
+                android:elevation="6dp"
+                android:layout_marginEnd="8dp"
+                android:foreground="?attr/selectableItemBackground">
 
-        <!-- İstatistikler -->
-        <Button
-            android:id="@+id/btnMyStats"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="My Stats"
-            android:backgroundTint="?attr/colorPrimary"
-            android:textColor="@android:color/white" />
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/view_stocks" />
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="View Stocks"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp"
+                    android:layout_marginTop="8dp"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/btnMyStats"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:backgroundTint="#3A8DFF"
+                android:background="@drawable/card_bg"
+                android:padding="16dp"
+                android:elevation="6dp"
+                android:layout_marginStart="8dp"
+                android:foreground="?attr/selectableItemBackground">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/my_stats" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="My Stats"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp"
+                    android:layout_marginTop="8dp"/>
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

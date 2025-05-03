@@ -4,51 +4,64 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp"
-    android:background="@color/white">
+    android:background="@drawable/login_bg"
+    android:padding="24dp">
 
-    <TextView
-        android:id="@+id/transferTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Send Money"
-        android:textSize="22sp"
-        android:textStyle="bold"
+    <!-- Money Transfer Amblemi (başlık yerine) -->
+    <ImageView
+        android:id="@+id/moneyTransferLogo"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:src="@drawable/money_transfer_emblem"
+        android:contentDescription="Money Transfer"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/receiverEmailInput"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="32dp" />
+        android:layout_marginTop="32dp"/>
 
+    <!-- Alıcı -->
     <EditText
-        android:id="@+id/receiverEmailInput"
+        android:id="@+id/recipientInput"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="Receiver's Email"
-        android:inputType="textEmailAddress"
-        app:layout_constraintTop_toBottomOf="@+id/transferTitle"
+        android:layout_height="50dp"
+        android:hint="Recipient Email"
+        android:background="@drawable/rounded_input"
+        android:paddingHorizontal="16dp"
+        android:textColor="@android:color/white"
+        android:textColorHint="#B0BEC5"
+        app:layout_constraintTop_toBottomOf="@id/moneyTransferLogo"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginTop="32dp"/>
 
+    <!-- Tutar -->
     <EditText
         android:id="@+id/amountInput"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="50dp"
         android:hint="Amount (₺)"
         android:inputType="numberDecimal"
-        app:layout_constraintTop_toBottomOf="@+id/receiverEmailInput"
+        android:background="@drawable/rounded_input"
+        android:paddingHorizontal="16dp"
+        android:textColor="@android:color/white"
+        android:textColorHint="#B0BEC5"
+        app:layout_constraintTop_toBottomOf="@id/recipientInput"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="24dp" />
+        android:layout_marginTop="16dp"/>
 
-    <Button
+    <!-- Gönder Butonu (büyük) -->
+    <ImageButton
         android:id="@+id/sendButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Send"
-        app:layout_constraintTop_toBottomOf="@+id/amountInput"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:src="@drawable/send_icon"
+        android:background="@null"
+        android:contentDescription="Send"
+        android:scaleType="centerInside"
+        app:layout_constraintTop_toBottomOf="@id/amountInput"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="32dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
