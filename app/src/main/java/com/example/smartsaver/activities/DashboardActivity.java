@@ -48,8 +48,6 @@ public class DashboardActivity extends AppCompatActivity {
             finish();
             return;
         }
-
-        welcomeText.setText("Welcome, " + userEmail);
         fetchUserBalance();  // initial load
 
         // --- set up button listeners ---
@@ -97,7 +95,9 @@ public class DashboardActivity extends AppCompatActivity {
                 response -> {
                     try {
                         double bal = response.getDouble("balance");
-                        balanceText.setText(String.format("Balance: ₺%.2f", bal));
+                        String fullName = response.getString("full_name");
+                        welcomeText.setText("Welcome, " + fullName);
+                        balanceText.setText(String.format("Balance: $%.2f", bal));
                     } catch (Exception e) {
                         Toast.makeText(this, "Veri çözümleme hatası", Toast.LENGTH_SHORT).show();
                     }
