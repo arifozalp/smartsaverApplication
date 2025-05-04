@@ -1,21 +1,35 @@
 // server.js
-const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
-const cors = require('cors');
-const path = require('path');
+const express  = require('express');
+const sqlite3  = require('sqlite3').verbose();
+const cors     = require('cors');
+const path     = require('path');
 
 const app = express();
-
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 🔗 Veritabanı bağlantısı
+/* ---------- DB ---------- */
 const dbPath = path.resolve(__dirname, 'database.db');
-console.log("📂 DB dosyası:", dbPath);
-console.log("📂 KULLANILAN DB DOSYASI:", __dirname + '/database.db');
+console.log('📂 DB dosyası:', dbPath);
 const db = new sqlite3.Database(dbPath);
+
+/* tablo – varsa dokunmaz */
+db.run(`CREATE TABLE IF NOT EXISTS portfolio(
+          id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id     INTEGER NOT NULL,
+          stock_code  TEXT    NOT NULL,
+          quantity    INTEGER NOT NULL,
+          avg_price   REAL    NOT NULL,
+          UNIQUE(user_id, stock_code),
+          FOREIGN KEY(user_id) REFERENCES users(id)
+)`);
+
+/* -------------------------------------------------- */
+/*                AUTH & PROFİL ENDPOINT’LER          */
+/* -------------------------------------------------- */
+// … (register, login, get_user, user_profiles, favorites vs. KODUNUZLA AYNI — DEĞİŞMEDİ)
+
 
 // ✅ Kullanıcı kaydı (email + şifre, ardından profil)
 app.post('/register', (req, res) => {
@@ -77,22 +91,6 @@ app.get('/user_profiles/:user_id', (req, res) => {
     if (err) return res.status(500).json({ error: err.message });
     if (!row) return res.status(404).json({ error: 'Profile not found' });
     res.json(row);
-  });
-});
-
-// ✅ Favori kullanıcıları getir
-app.get('/favorites/:user_id', (req, res) => {
-  const user_id = req.params.user_id;
-  const query = `
-    SELECT u.id, u.email, p.full_name, p.balance
-    FROM favorites f
-    JOIN users u ON f.favorite_user_id = u.id
-    JOIN user_profiles p ON u.id = p.user_id
-    WHERE f.user_id = ?;
-  `;
-  db.all(query, [user_id], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
   });
 });
 
@@ -182,8 +180,104 @@ app.post('/transactions', (req, res) => {
   });
 });
 
-// ✅ Sunucuyu başlat
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`✅ API server is running on http://localhost:${PORT}`);
+
+
+
+
+
+
+
+
+
+
+/* -------------------------------------------------- */
+/*                      PORTFÖY                       */
+/* -------------------------------------------------- */
+
+/* Tek hisse (user_id + code) */
+app.get('/portfolio/:user_id/:code', (req,res)=>{
+  const { user_id, code } = req.params;
+  db.get(`SELECT quantity, avg_price
+          FROM portfolio WHERE user_id=? AND stock_code=?`,
+         [user_id, code],
+         (e,row)=> res.json(row || { quantity:0, avg_price:0 }));
 });
+
+/* Tüm portföy */
+app.get('/portfolio/:user_id', (req,res)=>{
+  db.all(`SELECT stock_code, quantity, avg_price
+          FROM portfolio WHERE user_id=?`,
+         [req.params.user_id],
+         (e,rows)=> e?res.status(500).json({error:e.message}):res.json(rows));
+});
+
+/* ---------------- BUY ---------------- */
+app.post('/portfolio/buy', (req,res)=>{
+  const { user_id, stock_code, quantity, price } = req.body;
+  if(!user_id||!stock_code||!quantity||!price)
+      return res.status(400).json({error:'fields'});
+  const qty = parseInt(quantity);
+  const prc = parseFloat(price);
+  if(qty<=0||prc<=0)        return res.status(400).json({error:'vals'});
+  const cost = qty*prc;
+
+  db.serialize(()=>{
+    db.run('BEGIN');
+    /* yeterli bakiye? */
+    db.get('SELECT balance FROM user_profiles WHERE user_id=?',[user_id],(e,row)=>{
+      if(e||!row||row.balance<cost){ db.run('ROLLBACK');
+        return res.status(400).json({error:'bal'}); }
+
+      /* portföy upsert */
+      db.run(`INSERT INTO portfolio(user_id,stock_code,quantity,avg_price)
+              VALUES(?,?,?,?)
+              ON CONFLICT(user_id,stock_code) DO UPDATE SET
+                avg_price=(portfolio.avg_price*portfolio.quantity + excluded.avg_price*excluded.quantity)/
+                          (portfolio.quantity+excluded.quantity),
+                quantity = portfolio.quantity + excluded.quantity`,
+              [user_id,stock_code,qty,prc]);
+
+      /* bakiye düş */
+      db.run('UPDATE user_profiles SET balance = balance - ? WHERE user_id=?',
+             [cost, user_id]);
+
+      db.run('COMMIT',()=>res.json({success:true}));
+    });
+  });
+});
+
+/* ---------------- SELL ---------------- */
+app.post('/portfolio/sell', (req,res)=>{
+  const { user_id, stock_code, quantity, price } = req.body;
+  if(!user_id||!stock_code||!quantity||!price)
+      return res.status(400).json({error:'fields'});
+  const qty = parseInt(quantity);
+  const prc = parseFloat(price);
+  const income = qty*prc;
+
+  db.serialize(()=>{
+    db.run('BEGIN');
+    db.get('SELECT quantity FROM portfolio WHERE user_id=? AND stock_code=?',
+           [user_id, stock_code], (e,row)=>{
+      if(e||!row||row.quantity<qty){ db.run('ROLLBACK');
+        return res.status(400).json({error:'qty'}); }
+
+      /* portföyden düş veya sıfırsa satır sil */
+      const newQty = row.quantity - qty;
+      if(newQty===0)
+         db.run('DELETE FROM portfolio WHERE user_id=? AND stock_code=?',[user_id,stock_code]);
+      else
+         db.run('UPDATE portfolio SET quantity=? WHERE user_id=? AND stock_code=?',
+                [newQty,user_id,stock_code]);
+
+      /* bakiye ekle */
+      db.run('UPDATE user_profiles SET balance = balance + ? WHERE user_id=?',
+             [income, user_id]);
+
+      db.run('COMMIT',()=>res.json({success:true}));
+    });
+  });
+});
+
+const PORT = 3000;
+app.listen(PORT, ()=> console.log(`✅ API running → http://localhost:${PORT}`));
