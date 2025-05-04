@@ -8,7 +8,6 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.smartsaver.R;
-import com.example.smartsaver.utils.RiskEvaluator;
 
 public class SuggestionResultActivity extends AppCompatActivity {
 
@@ -37,24 +36,32 @@ public class SuggestionResultActivity extends AppCompatActivity {
         risk = intent.getStringExtra("risk");
         goal = intent.getStringExtra("goal");
 
-        // Plan özetini yaz
+        // Yeni eklenen hisse bilgileri
+        String stockSymbol = intent.getStringExtra("stock_symbol");
+        String stockName   = intent.getStringExtra("stock_name");
+        double stockPrice  = intent.getDoubleExtra("stock_price", 0);
+        String stockNote   = intent.getStringExtra("stock_note");
+
+        // Plan özeti
         planSummary.setText("You plan to invest ₺" + amount + " for a " + duration.toLowerCase() +
                 " term with a " + risk.toLowerCase() + " risk level towards: " + goal + ".");
 
-        // RiskEvaluator sınıfıyla öneriyi al
-        String recommendation = RiskEvaluator.generateRecommendation(duration, risk, amount);
+        // Öneri metni
+        String recommendation = "We recommend buying stock \"" + stockName + "\" (" + stockSymbol +
+                ") currently priced at $" + stockPrice + ".\n\n" + stockNote;
+
         recommendationText.setText(recommendation);
 
         // Risk kutusu renklendirme
         riskLevelBox.setText("Risk Level: " + risk);
-        switch (RiskEvaluator.determineRiskColor(risk)) {
-            case "green":
+        switch (risk.toLowerCase()) {
+            case "low":
                 riskLevelBox.setBackgroundColor(getResources().getColor(android.R.color.holo_green_dark));
                 break;
-            case "orange":
+            case "medium":
                 riskLevelBox.setBackgroundColor(getResources().getColor(android.R.color.holo_orange_dark));
                 break;
-            case "red":
+            case "high":
                 riskLevelBox.setBackgroundColor(getResources().getColor(android.R.color.holo_red_dark));
                 break;
             default:
