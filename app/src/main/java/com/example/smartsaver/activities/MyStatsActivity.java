@@ -64,7 +64,7 @@ public class MyStatsActivity extends AppCompatActivity {
                     try {
                         double bal = response.getDouble("balance");
                         balanceStat.setText(
-                                String.format(Locale.getDefault(), "Balance: ₺%.2f", bal)
+                                String.format(Locale.getDefault(), "Balance: $%.2f", bal)
                         );
                     } catch (JSONException e) {
                         Toast.makeText(this, "Bakiye verisi okunamadı", Toast.LENGTH_SHORT).show();
@@ -94,10 +94,10 @@ public class MyStatsActivity extends AppCompatActivity {
                         if (p >= 0) posCnt++; else negCnt++;
                     }
                     totalInvestment.setText(
-                            String.format(Locale.getDefault(), "Total Investment: ₺%.2f", totalInv)
+                            String.format(Locale.getDefault(), "Total Investment: $%.2f", totalInv)
                     );
                     totalProfit.setText(
-                            String.format(Locale.getDefault(), "Total Profit: ₺%.2f", totalProf)
+                            String.format(Locale.getDefault(), "Total Profit: $%.2f", totalProf)
                     );
                     positiveCount.setText("Profitable Stocks: " + posCnt);
                     negativeCount.setText("Loss Stocks: " + negCnt);
@@ -150,10 +150,10 @@ public class MyStatsActivity extends AppCompatActivity {
                 String line;
                 if (from == userId) {
                     line = String.format(Locale.getDefault(),
-                            "Sent ₺%.2f to %s on %s", amt, targetName, date);
+                            "Sent $%.2f to %s on %s", amt, targetName, date);
                 } else {
                     line = String.format(Locale.getDefault(),
-                            "Received ₺%.2f from %s on %s", amt, senderName, date);
+                            "Received $%.2f from %s on %s", amt, senderName, date);
                 }
 
                 lines.add(line);

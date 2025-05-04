@@ -2,6 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@drawable/stats_bg"
     android:padding="24dp"
     android:fillViewport="true">
@@ -87,13 +88,23 @@
                 android:textColor="#FFCDD2"
                 android:layout_marginBottom="8dp" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnViewTransfers"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="View Transfers"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
                 android:textStyle="bold"
-                android:layout_marginTop="24dp" />
+                android:textSize="16sp"
+                android:layout_marginTop="24dp"
+                android:backgroundTint="#2196F3"
+                app:cornerRadius="16dp"
+                app:iconPadding="8dp"
+                app:iconGravity="textStart"
+                app:elevation="6dp" />
+
+
         </LinearLayout>
 
         <TextView
