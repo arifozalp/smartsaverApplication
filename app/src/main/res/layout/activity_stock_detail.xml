@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
@@ -21,21 +20,21 @@
             android:textStyle="bold"
             android:textSize="20sp" />
 
-        <!-- Aralık seçici — daha geniş dokunma alanı -->
+        <!-- Aralık seçici -->
         <Spinner
             android:id="@+id/rangeSpinner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="48dp"
             android:paddingVertical="8dp"
-            android:layout_marginTop="8dp" />
+            android:layout_marginTop="8dp"/>
 
         <!-- Güncel fiyat -->
         <TextView
             android:id="@+id/stockPrice"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Current Price: ₺42.00"
+            android:text="Current Price: ₺0.00"
             android:textSize="16sp"
             android:layout_marginTop="4dp" />
 
@@ -44,7 +43,7 @@
             android:id="@+id/stockChange"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Change: +2.5%"
+            android:text="Change: 0.00%"
             android:textSize="16sp"
             android:layout_marginBottom="16dp" />
 
@@ -55,14 +54,14 @@
             android:layout_height="300dp"
             android:layout_marginTop="16dp" />
 
-        <!-- Kullanıcının bakiyesini göster -->
+        <!-- Kullanıcı bakiyesi -->
         <TextView
             android:id="@+id/userBalance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Balance: ₺0.00"
             android:textSize="16sp"
-            android:layout_marginTop="8dp" />
+            android:layout_marginTop="8dp"/>
 
         <!-- Miktar girme -->
         <EditText
@@ -70,10 +69,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Enter quantity"
-            android:inputType="numberDecimal"
+            android:inputType="number"
             android:layout_marginTop="16dp" />
 
-        <!-- Toplam tutar gösterimi -->
+        <!-- Toplam tutar -->
         <TextView
             android:id="@+id/totalCostText"
             android:layout_width="wrap_content"
@@ -82,7 +81,7 @@
             android:textSize="16sp"
             android:layout_marginTop="8dp" />
 
-        <!-- Kullanıcıda bulunan hisse miktarı -->
+        <!-- Sahip olunan miktar -->
         <TextView
             android:id="@+id/ownedQuantityText"
             android:layout_width="wrap_content"
@@ -91,20 +90,19 @@
             android:textSize="16sp"
             android:layout_marginTop="8dp" />
 
-        <!-- Alım & Satım butonları -->
         <Button
             android:id="@+id/btnBuy"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Buy"
-            android:layout_marginTop="8dp" />
+            android:layout_marginTop="12dp"/>
 
         <Button
             android:id="@+id/btnSell"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Sell"
-            android:layout_marginTop="4dp" />
+            android:layout_marginTop="4dp"/>
 
     </LinearLayout>
 </ScrollView>

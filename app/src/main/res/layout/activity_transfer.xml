@@ -34,7 +34,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="32dp"/>
 
-    <!-- Tutar -->
     <EditText
         android:id="@+id/amountInput"
         android:layout_width="0dp"

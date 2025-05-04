@@ -1,169 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@drawable/login_bg"
+    android:padding="24dp">
 
-    <!-- Arka plan görseli -->
     <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:src="@drawable/login_bg"
-        android:contentDescription="Background image" />
+        android:id="@+id/iconInvestment"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:src="@drawable/investment_icon"
+        android:contentDescription="Investment Icon"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="32dp" />
 
-    <!-- Logo ve içerik bir arada -->
+    <TextView
+        android:id="@+id/titleText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Create Investment Plan"
+        android:textColor="@android:color/white"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@id/iconInvestment"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"/>
+
+    <EditText
+        android:id="@+id/inputAmount"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:hint="Investment Amount (â‚º)"
+        android:background="@drawable/rounded_input"
+        android:inputType="numberDecimal"
+        android:textColor="@android:color/white"
+        android:textColorHint="#B0BEC5"
+        android:paddingHorizontal="16dp"
+        app:layout_constraintTop_toBottomOf="@id/titleText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp" />
+
+    <EditText
+        android:id="@+id/inputDuration"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:hint="Duration (e.g., 6 months)"
+        android:background="@drawable/rounded_input"
+        android:inputType="text"
+        android:textColor="@android:color/white"
+        android:textColorHint="#B0BEC5"
+        android:paddingHorizontal="16dp"
+        app:layout_constraintTop_toBottomOf="@id/inputAmount"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp" />
+
+    <EditText
+        android:id="@+id/inputRisk"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:hint="Risk Level (low, medium, high)"
+        android:background="@drawable/rounded_input"
+        android:inputType="text"
+        android:textColor="@android:color/white"
+        android:textColorHint="#B0BEC5"
+        android:paddingHorizontal="16dp"
+        app:layout_constraintTop_toBottomOf="@id/inputDuration"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp" />
+
+    <Spinner
+        android:id="@+id/goalSpinner"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/custom_spinner_background"
+        android:popupBackground="#0D47A1"
+        app:layout_constraintTop_toBottomOf="@id/inputRisk"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center_horizontal"
-        android:paddingTop="48dp">
+        android:layout_marginTop="24dp"
+        app:layout_constraintTop_toBottomOf="@id/goalSpinner"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Logo (kaplumbağa) -->
-        <ImageView
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:src="@drawable/logo_turtle"
-            android:layout_marginBottom="-24dp"
-            android:contentDescription="Logo"
-            android:elevation="12dp" />
+        <ImageButton
+            android:id="@+id/btnContinue"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="@null"
+            android:src="@drawable/plan_send_icon"
+            android:contentDescription="Continue"
+            android:scaleType="centerInside" />
 
-        <!-- ScrollView içinde form -->
-        <ScrollView
-            android:layout_width="match_parent"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@android:color/transparent">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <!-- Form kutusu -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="16dp"
-                    android:layout_marginTop="48dp"
-                    android:layout_marginBottom="48dp"
-                    android:background="@drawable/form_background"
-                    android:padding="36dp"
-                    android:paddingTop="60dp"
-                    android:elevation="10dp"
-                    android:minHeight="600dp"
-                    android:orientation="vertical">
-
-                    <!-- Form içeriği -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Create Your Smart Investment Plan"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
-                        android:textColor="#333"
-                        android:layout_marginBottom="24dp" />
-
-                    <EditText
-                        android:id="@+id/inputAmount"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="Amount (₺)"
-                        android:inputType="numberDecimal"
-                        android:layout_marginBottom="16dp"
-                        android:background="@drawable/edittext_bg"
-                        android:padding="12dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Investment Duration"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="8dp"
-                        android:textColor="#333" />
-
-                    <RadioGroup
-                        android:id="@+id/durationGroup"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="16dp">
-
-                        <RadioButton
-                            android:id="@+id/shortTerm"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Short" />
-                        <RadioButton
-                            android:id="@+id/mediumTerm"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Medium" />
-                        <RadioButton
-                            android:id="@+id/longTerm"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Long" />
-                    </RadioGroup>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Risk Level"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="8dp"
-                        android:textColor="#333" />
-
-                    <RadioGroup
-                        android:id="@+id/riskGroup"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="16dp">
-
-                        <RadioButton
-                            android:id="@+id/riskLow"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Low" />
-                        <RadioButton
-                            android:id="@+id/riskMedium"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Medium" />
-                        <RadioButton
-                            android:id="@+id/riskHigh"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="High" />
-                    </RadioGroup>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Your Goal"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="8dp"
-                        android:textColor="#333" />
-
-                    <Spinner
-                        android:id="@+id/goalSpinner"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="24dp" />
-
-                    <Button
-                        android:id="@+id/btnContinue"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Continue"
-                        android:backgroundTint="#4CAF50"
-                        android:textColor="@android:color/white"
-                        android:padding="12dp"
-                        android:textAllCaps="false" />
-                </LinearLayout>
-            </LinearLayout>
-        </ScrollView>
+            android:text="Continue"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="4dp"/>
     </LinearLayout>
-</FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
