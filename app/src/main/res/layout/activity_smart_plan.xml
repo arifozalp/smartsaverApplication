@@ -1,93 +1,169 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="24dp"
-    android:background="@color/white">
+    android:layout_height="match_parent">
 
+    <!-- Arka plan görseli -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/login_bg"
+        android:contentDescription="Background image" />
+
+    <!-- Logo ve içerik bir arada -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingTop="48dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Create Your Smart Investment Plan"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="24dp" />
+        <!-- Logo (kaplumbağa) -->
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/logo_turtle"
+            android:layout_marginBottom="-24dp"
+            android:contentDescription="Logo"
+            android:elevation="12dp" />
 
-        <!-- Para miktarı -->
-        <EditText
-            android:id="@+id/inputAmount"
+        <!-- ScrollView içinde form -->
+        <ScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Amount (₺)"
-            android:inputType="numberDecimal"
-            android:layout_marginBottom="16dp" />
+            android:background="@android:color/transparent">
 
-        <!-- Vade -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Investment Duration"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical">
 
-        <RadioGroup
-            android:id="@+id/durationGroup"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="16dp">
+                <!-- Form kutusu -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginTop="48dp"
+                    android:layout_marginBottom="48dp"
+                    android:background="@drawable/form_background"
+                    android:padding="36dp"
+                    android:paddingTop="60dp"
+                    android:elevation="10dp"
+                    android:minHeight="600dp"
+                    android:orientation="vertical">
 
-            <RadioButton android:id="@+id/shortTerm" android:text="Short" />
-            <RadioButton android:id="@+id/mediumTerm" android:text="Medium" />
-            <RadioButton android:id="@+id/longTerm" android:text="Long" />
-        </RadioGroup>
+                    <!-- Form içeriği -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Create Your Smart Investment Plan"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:textColor="#333"
+                        android:layout_marginBottom="24dp" />
 
-        <!-- Risk tercihi -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Risk Level"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+                    <EditText
+                        android:id="@+id/inputAmount"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Amount (₺)"
+                        android:inputType="numberDecimal"
+                        android:layout_marginBottom="16dp"
+                        android:background="@drawable/edittext_bg"
+                        android:padding="12dp" />
 
-        <RadioGroup
-            android:id="@+id/riskGroup"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="16dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Investment Duration"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp"
+                        android:textColor="#333" />
 
-            <RadioButton android:id="@+id/riskLow" android:text="Low" />
-            <RadioButton android:id="@+id/riskMedium" android:text="Medium" />
-            <RadioButton android:id="@+id/riskHigh" android:text="High" />
-        </RadioGroup>
+                    <RadioGroup
+                        android:id="@+id/durationGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
 
-        <!-- Yatırım hedefi -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Your Goal"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+                        <RadioButton
+                            android:id="@+id/shortTerm"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Short" />
+                        <RadioButton
+                            android:id="@+id/mediumTerm"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Medium" />
+                        <RadioButton
+                            android:id="@+id/longTerm"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Long" />
+                    </RadioGroup>
 
-        <Spinner
-            android:id="@+id/goalSpinner"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Risk Level"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp"
+                        android:textColor="#333" />
 
-        <!-- Buton -->
-        <Button
-            android:id="@+id/btnContinue"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Continue" />
+                    <RadioGroup
+                        android:id="@+id/riskGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
 
+                        <RadioButton
+                            android:id="@+id/riskLow"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Low" />
+                        <RadioButton
+                            android:id="@+id/riskMedium"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Medium" />
+                        <RadioButton
+                            android:id="@+id/riskHigh"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="High" />
+                    </RadioGroup>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Your Goal"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp"
+                        android:textColor="#333" />
+
+                    <Spinner
+                        android:id="@+id/goalSpinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="24dp" />
+
+                    <Button
+                        android:id="@+id/btnContinue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Continue"
+                        android:backgroundTint="#4CAF50"
+                        android:textColor="@android:color/white"
+                        android:padding="12dp"
+                        android:textAllCaps="false" />
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
     </LinearLayout>
-</ScrollView>
+</FrameLayout>
