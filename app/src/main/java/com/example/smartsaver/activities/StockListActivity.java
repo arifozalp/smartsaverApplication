@@ -36,16 +36,20 @@ import java.util.Locale;
 
 public class StockListActivity extends AppCompatActivity {
 
-    private RecyclerView stockRecyclerView;
-    private StockAdapter adapter;
-    private List<Stock> stockList = new ArrayList<>();
+    private RecyclerView       stockRecyclerView;
+    private StockAdapter       adapter;
+    private List<Stock>        stockList = new ArrayList<>();
 
-    private DBHelper dbHelper;
-    private final String API_KEY = "9UHXBHGRB85774EZ";
-    private final String BASE_URL = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=";
-    private final String[] symbols = {"AAPL", "MSFT", "AMZN", "GOOG", "TSLA", "NVDA", "META", "BABA", "NFLX", "ADBE"};
+    private DBHelper           dbHelper;
+    private final String       API_KEY  = "9UHXBHGRB85774EZ";
+    private final String       BASE_URL = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=";
+    private final String[]     symbols  = {"AAPL", "MSFT", "AMZN", "GOOG", "TSLA", "NVDA", "META", "BABA", "NFLX", "ADBE"};
 
-    private ItemTouchHelper itemTouchHelper;
+    // ← new fields to carry user info
+    private int    userId;
+    private String userEmail;
+
+    private ItemTouchHelper    itemTouchHelper;
     private GestureDetectorCompat gestureDetector;
 
     @Override
@@ -53,14 +57,21 @@ public class StockListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stock_list);
 
+        // ← pull user info from the Intent
+        userId    = getIntent().getIntExtra("user_id",   -1);
+        userEmail = getIntent().getStringExtra("user_email");
+
         dbHelper = new DBHelper(this);
         stockRecyclerView = findViewById(R.id.stockRecyclerView);
         stockRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         adapter = new StockAdapter(this, stockList, stock -> {
             Intent intent = new Intent(this, StockDetailActivity.class);
-            intent.putExtra("stock_code", stock.code);
-            intent.putExtra("stock_name", stock.name);
+            intent.putExtra("stock_code",  stock.code);
+            intent.putExtra("stock_name",  stock.name);
+            // ← forward user info too
+            intent.putExtra("user_id",     userId);
+            intent.putExtra("user_email",  userEmail);
             startActivity(intent);
         });
         stockRecyclerView.setAdapter(adapter);
@@ -69,163 +80,129 @@ public class StockListActivity extends AppCompatActivity {
         loadStocks();
     }
 
-    /**
-     * Gesture‑tabanlı sürükle‑bırak kurulumu
-     */
     private void initGestureDrag() {
-        // ItemTouchHelper – yalnızca move işlemleri aktif
-        ItemTouchHelper.SimpleCallback callback = new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
+        ItemTouchHelper.SimpleCallback callback = new ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
             @Override
-            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                int from = viewHolder.getAdapterPosition();
-                int to = target.getAdapterPosition();
+            public boolean onMove(RecyclerView rv, RecyclerView.ViewHolder vh, RecyclerView.ViewHolder tgt) {
+                int from = vh.getAdapterPosition(), to = tgt.getAdapterPosition();
                 Collections.swap(stockList, from, to);
                 adapter.notifyItemMoved(from, to);
                 return true;
             }
-
+            @Override public void onSwiped(RecyclerView.ViewHolder vh, int dir) { }
             @Override
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                // swipe pasif
-            }
-
-            // Sadece uzun basılıp drag başladığında görsel kaldırma efekti
-            @Override
-            public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int actionState) {
-                super.onSelectedChanged(viewHolder, actionState);
-                if (actionState == ItemTouchHelper.ACTION_STATE_DRAG && viewHolder != null) {
-                    viewHolder.itemView.setAlpha(0.7f);
+            public void onSelectedChanged(RecyclerView.ViewHolder vh, int state) {
+                super.onSelectedChanged(vh, state);
+                if (state == ItemTouchHelper.ACTION_STATE_DRAG && vh != null) {
+                    vh.itemView.setAlpha(0.7f);
                 }
             }
-
             @Override
-            public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
-                super.clearView(recyclerView, viewHolder);
-                viewHolder.itemView.setAlpha(1f);
+            public void clearView(RecyclerView rv, RecyclerView.ViewHolder vh) {
+                super.clearView(rv, vh);
+                vh.itemView.setAlpha(1f);
             }
         };
         itemTouchHelper = new ItemTouchHelper(callback);
         itemTouchHelper.attachToRecyclerView(stockRecyclerView);
 
-        // GestureDetector – uzun basıyı yakalar ve drag'i başlatır
         gestureDetector = new GestureDetectorCompat(this, new GestureDetector.SimpleOnGestureListener() {
-            @Override
-            public void onLongPress(MotionEvent e) {
+            @Override public void onLongPress(MotionEvent e) {
                 View child = stockRecyclerView.findChildViewUnder(e.getX(), e.getY());
-                if (child != null) {
-                    RecyclerView.ViewHolder holder = stockRecyclerView.getChildViewHolder(child);
-                    itemTouchHelper.startDrag(holder);
+                if (child!=null) {
+                    RecyclerView.ViewHolder vh = stockRecyclerView.getChildViewHolder(child);
+                    itemTouchHelper.startDrag(vh);
                 }
             }
-
-            // onSingleTapUp true dönmezse longPress çalışmayabilir
-            @Override
-            public boolean onSingleTapUp(MotionEvent e) {
-                return true;
-            }
+            @Override public boolean onSingleTapUp(MotionEvent e) { return true; }
         });
 
         stockRecyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
-            @Override
-            public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
+            @Override public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
                 gestureDetector.onTouchEvent(e);
                 return false;
             }
-
-            @Override
-            public void onTouchEvent(RecyclerView rv, MotionEvent e) {
-                // no‑op
-            }
-
-            @Override
-            public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-                // no‑op
-            }
+            @Override public void onTouchEvent(RecyclerView rv, MotionEvent e) { }
+            @Override public void onRequestDisallowInterceptTouchEvent(boolean d) { }
         });
     }
 
-    // -----------------------  DATA  ----------------------------
-
     private void loadStocks() {
-        for (String symbol : symbols) {
-            if (shouldFetchFromApi(symbol)) {
-                fetchStockDataFromApi(symbol);
-            } else {
-                loadStockFromDatabase(symbol);
-            }
+        for (String sym : symbols) {
+            if (shouldFetchFromApi(sym)) fetchStockDataFromApi(sym);
+            else                        loadStockFromDatabase(sym);
         }
     }
 
     private boolean shouldFetchFromApi(String symbol) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT last_updated FROM stocks WHERE symbol = ?", new String[]{symbol});
-        if (cursor.moveToFirst()) {
-            String lastUpdated = cursor.getString(0);
-            String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-            cursor.close();
-            return !today.equals(lastUpdated);
+        Cursor c = db.rawQuery("SELECT last_updated FROM stocks WHERE symbol=?", new String[]{symbol});
+        boolean fetch = true;
+        if (c.moveToFirst()) {
+            String last = c.getString(0),
+                    today= new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+            fetch = !today.equals(last);
         }
-        cursor.close();
-        return true;
+        c.close();
+        return fetch;
     }
 
     private void loadStockFromDatabase(String symbol) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT symbol, name, price, change_percent FROM stocks WHERE symbol = ?", new String[]{symbol});
-        if (cursor.moveToFirst()) {
-            Stock stock = new Stock();
-            stock.code = cursor.getString(0);
-            stock.name = cursor.getString(1);
-            stock.price = cursor.getDouble(2);
-            stock.changePercent = cursor.getDouble(3);
-            stockList.add(stock);
+        Cursor c = db.rawQuery(
+                "SELECT symbol,name,price,change_percent FROM stocks WHERE symbol=?",
+                new String[]{symbol}
+        );
+        if (c.moveToFirst()) {
+            Stock s = new Stock();
+            s.code          = c.getString(0);
+            s.name          = c.getString(1);
+            s.price         = c.getDouble(2);
+            s.changePercent = c.getDouble(3);
+            stockList.add(s);
             adapter.notifyDataSetChanged();
         }
-        cursor.close();
+        c.close();
     }
 
     private void fetchStockDataFromApi(String symbol) {
         String url = BASE_URL + symbol + "&apikey=" + API_KEY;
-
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
-                response -> {
+        JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, url, null,
+                resp -> {
                     try {
-                        JSONObject timeSeries = response.getJSONObject("Time Series (Daily)");
-                        Iterator<String> dates = timeSeries.keys();
+                        JSONObject ts    = resp.getJSONObject("Time Series (Daily)");
+                        Iterator<String> dates = ts.keys();
                         if (!dates.hasNext()) return;
-                        String latestDate = dates.next();
-                        JSONObject latestData = timeSeries.getJSONObject(latestDate);
-                        double latestClose = Double.parseDouble(latestData.getString("4. close"));
+                        String latest = dates.next();
+                        double close1 = Double.parseDouble(ts.getJSONObject(latest).getString("4. close"));
                         if (!dates.hasNext()) return;
-                        String previousDate = dates.next();
-                        JSONObject previousData = timeSeries.getJSONObject(previousDate);
-                        double previousClose = Double.parseDouble(previousData.getString("4. close"));
-                        double changePercent = ((latestClose - previousClose) / previousClose) * 100;
+                        String prev = dates.next();
+                        double close2 = Double.parseDouble(ts.getJSONObject(prev).getString("4. close"));
+                        double pct = ((close1 - close2)/close2)*100;
 
-                        Stock stock = new Stock();
-                        stock.code = symbol;
-                        stock.name = symbol;
-                        stock.price = latestClose;
-                        stock.changePercent = changePercent;
+                        Stock s = new Stock();
+                        s.code          = symbol;
+                        s.name          = symbol;
+                        s.price         = close1;
+                        s.changePercent = pct;
 
-                        stockList.add(stock);
+                        stockList.add(s);
                         adapter.notifyDataSetChanged();
-                        saveStockToDatabase(stock);
-
+                        saveStockToDatabase(s);
                     } catch (JSONException e) {
-                        Toast.makeText(this, "Parse error: " + symbol, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this,"Parse error: "+symbol,Toast.LENGTH_SHORT).show();
                     }
                 },
-                error -> Toast.makeText(this, "API error: " + symbol, Toast.LENGTH_SHORT).show());
-
-        Volley.newRequestQueue(this).add(request);
+                err -> Toast.makeText(this,"API error: "+symbol,Toast.LENGTH_SHORT).show()
+        );
+        Volley.newRequestQueue(this).add(req);
     }
 
     private void saveStockToDatabase(Stock stock) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-
-        db.execSQL("REPLACE INTO stocks (symbol, name, price, change_percent, last_updated) VALUES (?, ?, ?, ?, ?)",
+        String today = new SimpleDateFormat("yyyy-MM-dd",Locale.getDefault()).format(new Date());
+        db.execSQL("REPLACE INTO stocks(symbol,name,price,change_percent,last_updated) VALUES(?,?,?,?,?)",
                 new Object[]{stock.code, stock.name, stock.price, stock.changePercent, today});
     }
 }
