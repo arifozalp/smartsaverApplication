@@ -1,17 +1,10 @@
 package com.example.smartsaver.activities;
 
+import android.app.AlertDialog;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -43,355 +36,336 @@ public class StockDetailActivity extends AppCompatActivity {
 
     private enum Range { WEEK, MONTH, YEAR }
 
-    private TextView  stockSymbol, stockPrice, stockChange, userBalanceText;
-    private Spinner   rangeSpinner;
+    private static final String BASE_URL   = "http://10.0.2.2:3000";
+    private static final String TRX_URL    = BASE_URL + "/transactions";
+
+    private static final String BUY_URL  = BASE_URL + "/portfolio/buy";
+    private static final String SELL_URL = BASE_URL + "/portfolio/sell";
+    private static final String TABLE_HIST = "stock_details";
+    private static final String TABLE_OWN  = "user_holdings";
+
+    /* ----------------Views------------------------- */
+    private TextView stockSymbol, stockPrice, stockChange,
+            userBalanceText, ownedSharesText,
+            quantityText, totalText;
+    private Spinner      rangeSpinner;
+    private ToggleButton toggleMode;
+    private Button   btnInc, btnDec, btnConfirm;
     private LineChart lineChart;
-    private EditText  inputQuantity;
-    private TextView  totalCostText, ownedQuantityText;
-    private Button    btnBuy, btnSell;
 
-    private DBHelper  dbHelper;
-    private int       userId;
-    private String    symbol;
-    private double    currentPrice = 0;
+    /* ----------------Data-------------------------- */
+    private DBHelper dbHelper;
+    private String   symbol;          // “AAPL” veya “ASELS”
+    private int      userId;
+    private double   currentPrice = 0;
+    private double   balance      = 0;
+    private int      ownedShares  = 0;
+    private int      quantity     = 0;
 
-    private static final String API_KEY  = "9UHXBHGRB85774EZ";
-    private static final String BASE_URL = "http://10.0.2.2:3000";
-
+    /* ==================================================================== */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stock_detail);
 
-        // View binding
-        stockSymbol       = findViewById(R.id.stockSymbol);
-        stockPrice        = findViewById(R.id.stockPrice);
-        stockChange       = findViewById(R.id.stockChange);
-        userBalanceText   = findViewById(R.id.userBalance);
-        lineChart         = findViewById(R.id.lineChart);
-        rangeSpinner      = findViewById(R.id.rangeSpinner);
-        inputQuantity     = findViewById(R.id.inputQuantity);
-        totalCostText     = findViewById(R.id.totalCostText);
-        ownedQuantityText = findViewById(R.id.ownedQuantityText);
-        btnBuy            = findViewById(R.id.btnBuy);
-        btnSell           = findViewById(R.id.btnSell);
-
+        bindViews();
         dbHelper = new DBHelper(this);
 
-        // Intent'ten gelenler
-        symbol = getIntent().getStringExtra("stock_code");
-        userId = getIntent().getIntExtra("user_id", -1);
+        symbol  = getIntent().getStringExtra("stock_code");
+        userId  = getIntent().getIntExtra("user_id",-1);
         stockSymbol.setText(symbol);
 
-        // Spinner kurulumu
-        ArrayAdapter<String> spAdapter = new ArrayAdapter<>(
-                this, android.R.layout.simple_spinner_item, new String[]{"1W","1M","1Y"}
-        );
-        spAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        rangeSpinner.setAdapter(spAdapter);
+        initSpinner();
+        ensureTables();
+        fetchUserBalanceAndOwned();
+    }
+
+    /* -------------------- View & Spinner ------------------------------- */
+    private void bindViews() {
+        stockSymbol     = findViewById(R.id.stockSymbol);
+        stockPrice      = findViewById(R.id.stockPrice);
+        stockChange     = findViewById(R.id.stockChange);
+        userBalanceText = findViewById(R.id.userBalance);
+        ownedSharesText = findViewById(R.id.ownedShares);
+        quantityText    = findViewById(R.id.quantityText);
+        totalText       = findViewById(R.id.totalText);
+
+        rangeSpinner    = findViewById(R.id.rangeSpinner);
+        toggleMode      = findViewById(R.id.toggleMode);
+        btnInc          = findViewById(R.id.btnIncrease);
+        btnDec          = findViewById(R.id.btnDecrease);
+        btnConfirm      = findViewById(R.id.btnConfirm);
+        lineChart       = findViewById(R.id.lineChart);
+
+        toggleMode.setChecked(true);                 // default BUY
+        btnInc.setOnClickListener(v -> changeQuantity(+1));
+        btnDec.setOnClickListener(v -> changeQuantity(-1));
+        btnConfirm.setOnClickListener(v -> confirmTransaction());
+    }
+
+    private void initSpinner() {
+        ArrayAdapter<String> sp = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item,
+                new String[]{"1W","1M","1Y"});
+        sp.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        rangeSpinner.setAdapter(sp);
         rangeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(AdapterView<?> parent, android.view.View view, int position, long id) {
-                loadRange(Range.values()[position]);
+            @Override public void onItemSelected(AdapterView<?> p, android.view.View v,int pos,long id){
+                loadRange(Range.values()[pos]);
             }
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
+            @Override public void onNothingSelected(AdapterView<?> p){}
         });
         rangeSpinner.setSelection(0);
-
-        // API’dan bakiye ve portföy bilgilerini çek
-        fetchUserBalance();
-        fetchOwnedQuantity();
-
-        // Miktar girince toplam tutar güncellensin
-        inputQuantity.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int st, int b, int c) {}
-            @Override public void onTextChanged(CharSequence s, int st, int b, int c) {}
-            @Override public void afterTextChanged(Editable s) {
-                String qs = s.toString();
-                if (qs.isEmpty() || currentPrice <= 0) {
-                    totalCostText.setText("Total: ₺0.00");
-                    return;
-                }
-                try {
-                    double qty = Double.parseDouble(qs);
-                    double total = qty * currentPrice;
-                    totalCostText.setText(String.format(Locale.getDefault(),"Total: ₺%.2f", total));
-                } catch (NumberFormatException e) {
-                    totalCostText.setText("Total: ₺0.00");
-                }
-            }
-        });
-
-        // Buy düğmesi
-        btnBuy.setOnClickListener(v -> {
-            String qs = inputQuantity.getText().toString();
-            if (qs.isEmpty()) {
-                Toast.makeText(this,"Enter quantity",Toast.LENGTH_SHORT).show();
-                return;
-            }
-            int qty;
-            try { qty = Integer.parseInt(qs); }
-            catch (NumberFormatException e) {
-                Toast.makeText(this,"Invalid quantity",Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (qty <= 0) {
-                Toast.makeText(this,"Quantity > 0",Toast.LENGTH_SHORT).show();
-                return;
-            }
-            sendBuyRequest(qty);
-        });
-
-        // Sell düğmesi
-        btnSell.setOnClickListener(v -> {
-            String qs = inputQuantity.getText().toString();
-            if (qs.isEmpty()) {
-                Toast.makeText(this,"Enter quantity",Toast.LENGTH_SHORT).show();
-                return;
-            }
-            int qty;
-            try { qty = Integer.parseInt(qs); }
-            catch (NumberFormatException e) {
-                Toast.makeText(this,"Invalid quantity",Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (qty <= 0) {
-                Toast.makeText(this,"Quantity > 0",Toast.LENGTH_SHORT).show();
-                return;
-            }
-            sendSellRequest(qty);
-        });
     }
 
-    // API’dan bakiye çek
-    private void fetchUserBalance() {
-        if (userId < 0) return;
-        String url = BASE_URL + "/user_profiles/" + userId;
-        Volley.newRequestQueue(this).add(new JsonObjectRequest(
-                Request.Method.GET, url, null,
-                resp -> {
-                    try {
-                        double bal = resp.getDouble("balance");
-                        userBalanceText.setText(
-                                String.format(Locale.getDefault(),"Balance: ₺%.2f", bal)
-                        );
-                    } catch (JSONException e) {
-                        Toast.makeText(this,"Balance parse error",Toast.LENGTH_SHORT).show();
-                    }
-                },
-                err -> Toast.makeText(this,"Balance fetch failed",Toast.LENGTH_SHORT).show()
-        ));
-    }
-
-    // API’dan sahip olunan miktarı çek
-    private void fetchOwnedQuantity() {
-        if (userId < 0) return;
-        String url = BASE_URL + "/portfolio/" + userId + "/" + symbol;
-        Volley.newRequestQueue(this).add(new JsonObjectRequest(
-                Request.Method.GET, url, null,
-                resp -> {
-                    int owned = resp.optInt("quantity", 0);
-                    ownedQuantityText.setText("Owned: " + owned);
-                },
-                err -> ownedQuantityText.setText("Owned: 0")
-        ));
-    }
-
-    // Buy isteği
-    private void sendBuyRequest(int qty) {
-        String url = BASE_URL + "/portfolio/buy";
-        Volley.newRequestQueue(this).add(new StringRequest(
-                Request.Method.POST, url,
-                resp -> {
-                    Toast.makeText(this,"Bought "+qty+" shares",Toast.LENGTH_SHORT).show();
-                    fetchUserBalance();
-                    fetchOwnedQuantity();
-                },
-                err -> Toast.makeText(this,"Buy failed",Toast.LENGTH_SHORT).show()
-        ) {
-            @Override protected Map<String,String> getParams() {
-                Map<String,String> p = new HashMap<>();
-                p.put("user_id",    String.valueOf(userId));
-                p.put("stock_code", symbol);
-                p.put("quantity",   String.valueOf(qty));
-                p.put("price",      String.valueOf(currentPrice));
-                return p;
-            }
-        });
-    }
-
-    // Sell isteği
-    private void sendSellRequest(int qty) {
-        String url = BASE_URL + "/portfolio/sell";
-        Volley.newRequestQueue(this).add(new StringRequest(
-                Request.Method.POST, url,
-                resp -> {
-                    Toast.makeText(this,"Sold "+qty+" shares",Toast.LENGTH_SHORT).show();
-                    fetchUserBalance();
-                    fetchOwnedQuantity();
-                },
-                err -> Toast.makeText(this,"Sell failed",Toast.LENGTH_SHORT).show()
-        ) {
-            @Override protected Map<String,String> getParams() {
-                Map<String,String> p = new HashMap<>();
-                p.put("user_id",    String.valueOf(userId));
-                p.put("stock_code", symbol);
-                p.put("quantity",   String.valueOf(qty));
-                p.put("price",      String.valueOf(currentPrice));
-                return p;
-            }
-        });
-    }
-
-    private void loadRange(Range range) { /* … önceki kodunuz */ }
-
-    private void ensureTable() {
+    /* -------------------- SQLite tables -------------------------------- */
+    private void ensureTables() {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        db.execSQL(
-                "CREATE TABLE IF NOT EXISTS stock_details (" +
-                        " symbol TEXT, date TEXT, close REAL, freq TEXT DEFAULT 'WEEK'," +
-                        " PRIMARY KEY(symbol,date,freq)" +
-                        ")"
-        );
-        Cursor c = db.rawQuery("PRAGMA table_info(stock_details)", null);
-        boolean hasFreq = false;
-        while (c.moveToNext()) {
-            if ("freq".equalsIgnoreCase(c.getString(1))) {
-                hasFreq = true;
-                break;
-            }
-        }
-        c.close();
-        if (!hasFreq) {
-            db.execSQL("ALTER TABLE stock_details ADD COLUMN freq TEXT DEFAULT 'WEEK'");
-        }
+        db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_HIST+"(" +
+                "symbol TEXT, date TEXT, close REAL, freq TEXT," +
+                "PRIMARY KEY(symbol,date,freq))");
+
+        db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_OWN+"(" +
+                "user_id INTEGER, symbol TEXT, quantity INTEGER," +
+                "PRIMARY KEY(user_id,symbol))");
     }
 
-    private boolean shouldFetchFromApi(Range range) {
-        ensureTable();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cur = db.rawQuery(
-                "SELECT MAX(date) FROM stock_details WHERE symbol=? AND freq=?",
-                new String[]{symbol, range.name()}
-        );
-        String last = null;
-        if (cur.moveToFirst()) last = cur.getString(0);
-        cur.close();
-        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-        return last == null || !today.equals(last);
-    }
-
-    private void fetchStockData(Range range) {
-        String function;
-        int limit;
-        switch (range) {
-            case YEAR:  function = "TIME_SERIES_MONTHLY"; limit = 12; break;
-            case MONTH: function = "TIME_SERIES_WEEKLY";  limit = 4;  break;
-            default:    function = "TIME_SERIES_DAILY";   limit = 7;
-        }
-
-        String url = "https://www.alphavantage.co/query?function="
-                + function + "&symbol=" + symbol + "&apikey=" + API_KEY;
-
-        JsonObjectRequest req = new JsonObjectRequest(
-                Request.Method.GET,
-                url,
-                null,
-                response -> {
+    /* -------------------- Balance & Owned ------------------------------ */
+    private void fetchUserBalanceAndOwned() {
+        /* bakiye sunucudan */
+        String balUrl = BASE_URL + "/user_profiles/" + userId;
+        Volley.newRequestQueue(this).add(new StringRequest(balUrl,
+                r -> {
                     try {
-                        String key = function.contains("MONTHLY") ? "Monthly Time Series"
-                                : function.contains("WEEKLY")  ? "Weekly Time Series"
-                                : "Time Series (Daily)";
-                        JSONObject series = response.getJSONObject(key);
-                        Iterator<String> dates = series.keys();
+                        balance = new JSONObject(r).getDouble("balance");
+                        userBalanceText.setText(String.format(Locale.getDefault(),
+                                "Balance: ₺%.2f", balance));
+                    } catch (Exception ignore) {}
+                }, e -> {}));
 
-                        List<Entry> entries = new ArrayList<>();
-                        List<Float> closes  = new ArrayList<>();
+        /* owned shares (yerel cache) */
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT quantity FROM "+TABLE_OWN+
+                        " WHERE user_id=? AND symbol=?",
+                new String[]{String.valueOf(userId), symbol});
+        if (c.moveToFirst()) ownedShares = c.getInt(0);
+        c.close();
 
-                        SQLiteDatabase db = dbHelper.getWritableDatabase();
-                        db.beginTransaction();
-                        int i = 0;
-                        while (dates.hasNext() && i < limit) {
-                            String date = dates.next();
-                            float latestClose = Float.parseFloat(
-                                    series.getJSONObject(date).getString("4. close")
-                            );
+        ownedSharesText.setText("Owned: " + ownedShares);
+    }
 
-                            // → burada güncel fiyata aktarıyoruz:
-                            currentPrice = latestClose;
+    /* -------------------- Quantity controls ---------------------------- */
+    private void changeQuantity(int delta){
+        boolean isBuy = toggleMode.isChecked();
+        int max = isBuy ? (int)Math.floor(balance/currentPrice) : ownedShares;
+        quantity = Math.max(0, Math.min(max, quantity + delta));
 
-                            entries.add(new Entry(i, latestClose));
-                            closes.add(latestClose);
+        quantityText.setText(String.valueOf(quantity));
+        totalText.setText(String.format(Locale.getDefault(),
+                "Total: ₺%.2f", currentPrice * quantity));
+    }
 
-                            db.execSQL(
-                                    "REPLACE INTO stock_details(symbol,date,close,freq) VALUES(?,?,?,?)",
-                                    new Object[]{symbol, date, latestClose, range.name()}
-                            );
-                            i++;
-                        }
-                        db.setTransactionSuccessful();
-                        db.endTransaction();
+    /* -------------------- Confirmation dialog -------------------------- */
+    private void confirmTransaction(){
+        if(quantity == 0){
+            Toast.makeText(this,"Quantity is zero",Toast.LENGTH_SHORT).show();
+            return;
+        }
+        boolean isBuy = toggleMode.isChecked();
+        String mode   = isBuy ? "Buy" : "Sell";
 
-                        renderChart(entries, closes, range);
+        new AlertDialog.Builder(this)
+                .setTitle(mode + " " + quantity + " " + symbol + "?")
+                .setMessage("Are you sure?")
+                .setNegativeButton("Cancel",null)
+                .setPositiveButton("Yes",(d,w)-> sendTradeRequest(isBuy))
+                .show();
+    }
 
-                    } catch (JSONException e) {
-                        Toast.makeText(this, "Data parse error", Toast.LENGTH_SHORT).show();
-                    }
+    /* -------------------- REST: buy/sell ------------------------------- */
+    private void sendTradeRequest(boolean isBuy) {
+        String url = isBuy ? BUY_URL : SELL_URL;
+
+        StringRequest req = new StringRequest(
+                Request.Method.POST, url,
+                resp -> {
+                    // ⇣⇣ local state ⇣⇣
+                    if (isBuy)  ownedShares += quantity;
+                    else        ownedShares -= quantity;
+                    updateHoldingsInDb();
+                    updateBalanceAfterTrade();
+                    Toast.makeText(this, "Done!", Toast.LENGTH_SHORT).show();
                 },
-                error -> Toast.makeText(this, "API error", Toast.LENGTH_SHORT).show()
-        );
+                err -> Toast.makeText(this, "Trade failed", Toast.LENGTH_LONG).show()
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                double totalCost = quantity * currentPrice;
+
+                Map<String, String> p = new HashMap<>();
+                p.put("user_id",        String.valueOf(userId));
+                p.put("target_user_id", "");                         // buy/sell’de yok
+                p.put("type",           isBuy ? "buy" : "sell");
+                p.put("stock_code",     symbol);
+
+                // toplam ₺ tutar – bakiyeden düşülecek / eklenecek miktar
+                p.put("amount",   String.format(Locale.US, "%.2f", totalCost));
+
+                // Kac lot aldık / sattık?  <- EKSİK OLAN SATIR
+                p.put("quantity", String.valueOf(quantity));
+
+                // işlem fiyatı (birim fiyat) – backend’de raporlamada kullanılabilir
+                p.put("price",    String.format(Locale.US, "%.2f", currentPrice));
+
+                p.put("date", new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                        .format(new Date()));
+                return p;
+            }
+        };
 
         Volley.newRequestQueue(this).add(req);
     }
+    private void updateBalanceAfterTrade(){
+        String url = BASE_URL + "/user_profiles/" + userId;
+        Volley.newRequestQueue(this).add(new StringRequest(url,
+                r -> {
+                    try{
+                        balance = new JSONObject(r).getDouble("balance");
+                        userBalanceText.setText(String.format(Locale.getDefault(),
+                                "Balance: ₺%.2f", balance));
+                    }catch(Exception ignore){}
 
-
-
-    private void loadStockFromDatabase(Range range) {
-        ensureTable();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        int limit = (range == Range.YEAR) ? 12 : (range == Range.MONTH) ? 4 : 7;
-        Cursor cur = db.rawQuery(
-                "SELECT date, close FROM stock_details WHERE symbol=? AND freq=? ORDER BY date DESC LIMIT " + limit,
-                new String[]{symbol, range.name()}
-        );
-
-        List<Entry> entries = new ArrayList<>();
-        List<Float> closes  = new ArrayList<>();
-        int i = 0;
-        while (cur.moveToNext()) {
-            float close = cur.getFloat(1);
-            entries.add(new Entry(i, close));
-            closes.add(close);
-            i++;
-        }
-        cur.close();
-        renderChart(entries, closes, range);
+                    ownedSharesText.setText("Owned: " + ownedShares);
+                    quantity = 0;
+                    changeQuantity(0);       // limitleri ve “Total”i sıfırla
+                },
+                e -> Toast.makeText(this,"Balance fetch failed",Toast.LENGTH_SHORT).show()));
     }
 
-    private void renderChart(List<Entry> entries, List<Float> closes, Range range) {
-        if (closes.size() >= 2) {
-            float last = closes.get(0), prev = closes.get(1);
-            float change = ((last - prev) / prev) * 100;
-            stockPrice.setText(
-                    String.format(Locale.getDefault(),"Price: ₺%.2f", last)
-            );
-            stockChange.setText(
-                    String.format(Locale.getDefault(),"Change: %.2f%%", change)
-            );
+    private void updateHoldingsInDb(){
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        db.execSQL("REPLACE INTO "+TABLE_OWN+"(user_id,symbol,quantity) VALUES(?,?,?)",
+                new Object[]{userId, symbol, ownedShares});
+    }
+
+    /* ====================================================================
+                               PRICE & CHART
+       ==================================================================== */
+    private void loadRange(Range range){
+        if(shouldFetch(range)) fetchCsv(range);
+        else                   loadFromDb(range);
+    }
+
+    private boolean shouldFetch(Range range){
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT MAX(date) FROM "+TABLE_HIST+
+                " WHERE symbol=? AND freq=?", new String[]{symbol, range.name()});
+        String last=null; if(c.moveToFirst()) last=c.getString(0); c.close();
+
+        String today = new SimpleDateFormat("yyyy-MM-dd",Locale.getDefault()).format(new Date());
+        return last==null || !today.equals(last);
+    }
+
+    /* ------------- Stooq helpers ------------- */
+    private String normSym(){
+        return symbol.contains(".") ? symbol.toLowerCase()
+                : symbol.toLowerCase()+".us";
+    }
+    private String stooqUrl(){
+        return "https://stooq.com/q/d/l/?s=" + normSym() + "&i=d";
+    }
+
+    /* ------------- Fetch CSV & save ----------- */
+    private void fetchCsv(Range range){
+        Volley.newRequestQueue(this).add(
+                new StringRequest(Request.Method.GET, stooqUrl(),
+                        csv -> {
+                            String[] rows = csv.trim().split("\n");
+                            if(rows.length<=2){ lineChart.clear(); return; }
+
+                            int need = range==Range.YEAR?365 : range==Range.MONTH?30 : 7;
+                            List<Entry> entries   = new ArrayList<>();
+                            List<Float> closes    = new ArrayList<>();
+                            SQLiteDatabase db = dbHelper.getWritableDatabase();
+                            db.beginTransaction();
+
+                            for(int i=rows.length-1,x=0;i>=1&&x<need;i--,x++){
+                                String[] col = rows[i].split(",");
+                                String   date= col[0];
+                                float close  = Float.parseFloat(col[4]);
+
+                                if(x==0) currentPrice = close;
+                                entries.add(new Entry(x,close));
+                                closes.add(close);
+
+                                db.execSQL("REPLACE INTO "+TABLE_HIST+
+                                                "(symbol,date,close,freq) VALUES(?,?,?,?)",
+                                        new Object[]{symbol, date, close, range.name()});
+                            }
+                            db.setTransactionSuccessful();
+                            db.endTransaction();
+
+                            renderChart(entries, closes, range);
+                            changeQuantity(0);   // limitleri price’a göre yeniden hesapla
+                        },
+                        err -> lineChart.setNoDataText("Network error"))
+        );
+    }
+
+    /* ------------- Load from DB -------------- */
+    private void loadFromDb(Range range){
+        int limit = range==Range.YEAR?365 : range==Range.MONTH?30 : 7;
+
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery(
+                "SELECT date,close FROM "+TABLE_HIST+
+                        " WHERE symbol=? AND freq=? ORDER BY date DESC LIMIT "+limit,
+                new String[]{symbol, range.name()});
+
+        List<Entry> entries=new ArrayList<>();
+        List<Float> closes =new ArrayList<>();
+        int i=0;
+        while(c.moveToNext()){
+            float close = c.getFloat(1);
+            entries.add(new Entry(i++,close));
+            closes.add(close);
+        }
+        c.close();
+
+        if(!closes.isEmpty()) currentPrice = closes.get(0);
+        renderChart(entries, closes, range);
+        changeQuantity(0);
+    }
+
+    /* ------------- Draw chart ---------------- */
+    private void renderChart(List<Entry> entries, List<Float> closes, Range range){
+        if(entries.isEmpty()){
+            lineChart.clear();
+            lineChart.setNoDataText("No chart data");
+            return;
         }
 
-        String label = (range == Range.YEAR)  ? "12 Months"
-                : (range == Range.MONTH) ? "4 Weeks"
-                : "7 Days";
+        if(closes.size()>=2){
+            float last = closes.get(0), prev = closes.get(1);
+            float pct  = ((last-prev)/prev)*100f;
+            stockPrice.setText(String.format(Locale.getDefault(),
+                    "Price: ₺%.2f", last));
+            stockChange.setText(String.format(Locale.getDefault(),
+                    "Change: %.2f%%", pct));
+        }
+
+        String label = range==Range.YEAR? "365 Days":
+                range==Range.MONTH? "30 Days":"7 Days";
 
         LineDataSet ds = new LineDataSet(entries, label);
-        ds.setColor(getResources().getColor(R.color.colorPrimary));
-        ds.setCircleRadius(3f);
         ds.setValueTextSize(9f);
+        ds.setCircleRadius(3f);
+        ds.setColor(getResources().getColor(R.color.colorPrimary));
 
         lineChart.setData(new LineData(ds));
         lineChart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
         lineChart.getDescription().setText("Closing Prices");
-        lineChart.animateX(800);
+        lineChart.animateX(600);
         lineChart.invalidate();
     }
 }
