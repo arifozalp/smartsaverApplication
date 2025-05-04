@@ -3,9 +3,12 @@ package com.example.smartsaver.activities;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.view.View;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -14,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.smartsaver.R;
 import com.example.smartsaver.database.DBHelper;
@@ -32,6 +36,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.HashMap;
+import java.util.Map;
 
 public class StockDetailActivity extends AppCompatActivity {
 
@@ -40,9 +46,14 @@ public class StockDetailActivity extends AppCompatActivity {
     private TextView  stockSymbol, stockPrice, stockChange, userBalanceText;
     private Spinner   rangeSpinner;
     private LineChart lineChart;
+    private EditText  inputQuantity;
+    private TextView  totalCostText, ownedQuantityText;
+    private Button    btnBuy, btnSell;
+
     private DBHelper  dbHelper;
     private int       userId;
     private String    symbol;
+    private double    currentPrice = 0;
 
     private static final String API_KEY  = "9UHXBHGRB85774EZ";
     private static final String BASE_URL = "http://10.0.2.2:3000";
@@ -52,76 +63,186 @@ public class StockDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stock_detail);
 
-        // --- View binding ---
-        stockSymbol     = findViewById(R.id.stockSymbol);
-        stockPrice      = findViewById(R.id.stockPrice);
-        stockChange     = findViewById(R.id.stockChange);
-        userBalanceText = findViewById(R.id.userBalance);
-        lineChart       = findViewById(R.id.lineChart);
-        rangeSpinner    = findViewById(R.id.rangeSpinner);
+        // View binding
+        stockSymbol       = findViewById(R.id.stockSymbol);
+        stockPrice        = findViewById(R.id.stockPrice);
+        stockChange       = findViewById(R.id.stockChange);
+        userBalanceText   = findViewById(R.id.userBalance);
+        lineChart         = findViewById(R.id.lineChart);
+        rangeSpinner      = findViewById(R.id.rangeSpinner);
+        inputQuantity     = findViewById(R.id.inputQuantity);
+        totalCostText     = findViewById(R.id.totalCostText);
+        ownedQuantityText = findViewById(R.id.ownedQuantityText);
+        btnBuy            = findViewById(R.id.btnBuy);
+        btnSell           = findViewById(R.id.btnSell);
 
         dbHelper = new DBHelper(this);
 
-        // --- Intent verileri ---
+        // Intent'ten gelenler
         symbol = getIntent().getStringExtra("stock_code");
         userId = getIntent().getIntExtra("user_id", -1);
         stockSymbol.setText(symbol);
 
-        // --- Spinner setup ---
+        // Spinner kurulumu
         ArrayAdapter<String> spAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                new String[]{"1W","1M","1Y"}
+                this, android.R.layout.simple_spinner_item, new String[]{"1W","1M","1Y"}
         );
         spAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         rangeSpinner.setAdapter(spAdapter);
         rangeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            @Override public void onItemSelected(AdapterView<?> parent, android.view.View view, int position, long id) {
                 loadRange(Range.values()[position]);
             }
-            @Override public void onNothingSelected(AdapterView<?> parent) { }
+            @Override public void onNothingSelected(AdapterView<?> parent) {}
         });
-        rangeSpinner.setSelection(0); // default 1W
+        rangeSpinner.setSelection(0);
 
-        // --- Kullanıcı bakiyesini API'dan çek ve göster ---
+        // API’dan bakiye ve portföy bilgilerini çek
         fetchUserBalance();
+        fetchOwnedQuantity();
+
+        // Miktar girince toplam tutar güncellensin
+        inputQuantity.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int st, int b, int c) {}
+            @Override public void onTextChanged(CharSequence s, int st, int b, int c) {}
+            @Override public void afterTextChanged(Editable s) {
+                String qs = s.toString();
+                if (qs.isEmpty() || currentPrice <= 0) {
+                    totalCostText.setText("Total: ₺0.00");
+                    return;
+                }
+                try {
+                    double qty = Double.parseDouble(qs);
+                    double total = qty * currentPrice;
+                    totalCostText.setText(String.format(Locale.getDefault(),"Total: ₺%.2f", total));
+                } catch (NumberFormatException e) {
+                    totalCostText.setText("Total: ₺0.00");
+                }
+            }
+        });
+
+        // Buy düğmesi
+        btnBuy.setOnClickListener(v -> {
+            String qs = inputQuantity.getText().toString();
+            if (qs.isEmpty()) {
+                Toast.makeText(this,"Enter quantity",Toast.LENGTH_SHORT).show();
+                return;
+            }
+            int qty;
+            try { qty = Integer.parseInt(qs); }
+            catch (NumberFormatException e) {
+                Toast.makeText(this,"Invalid quantity",Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (qty <= 0) {
+                Toast.makeText(this,"Quantity > 0",Toast.LENGTH_SHORT).show();
+                return;
+            }
+            sendBuyRequest(qty);
+        });
+
+        // Sell düğmesi
+        btnSell.setOnClickListener(v -> {
+            String qs = inputQuantity.getText().toString();
+            if (qs.isEmpty()) {
+                Toast.makeText(this,"Enter quantity",Toast.LENGTH_SHORT).show();
+                return;
+            }
+            int qty;
+            try { qty = Integer.parseInt(qs); }
+            catch (NumberFormatException e) {
+                Toast.makeText(this,"Invalid quantity",Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (qty <= 0) {
+                Toast.makeText(this,"Quantity > 0",Toast.LENGTH_SHORT).show();
+                return;
+            }
+            sendSellRequest(qty);
+        });
     }
 
-    /** Kullanıcının en güncel bakiyesini /user_profiles/:id endpoint'inden alır */
+    // API’dan bakiye çek
     private void fetchUserBalance() {
         if (userId < 0) return;
-
         String url = BASE_URL + "/user_profiles/" + userId;
-        JsonObjectRequest req = new JsonObjectRequest(
+        Volley.newRequestQueue(this).add(new JsonObjectRequest(
                 Request.Method.GET, url, null,
-                response -> {
+                resp -> {
                     try {
-                        double bal = response.getDouble("balance");
-                        // Locale ile iki ondalık basamak
+                        double bal = resp.getDouble("balance");
                         userBalanceText.setText(
-                                String.format(Locale.getDefault(), "Balance: ₺%.2f", bal)
+                                String.format(Locale.getDefault(),"Balance: ₺%.2f", bal)
                         );
                     } catch (JSONException e) {
-                        Toast.makeText(this, "Balance parse error", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this,"Balance parse error",Toast.LENGTH_SHORT).show();
                     }
                 },
-                error -> {
-                    Toast.makeText(this, "Balance fetch failed", Toast.LENGTH_SHORT).show();
-                }
-        );
-
-        Volley.newRequestQueue(this).add(req);
+                err -> Toast.makeText(this,"Balance fetch failed",Toast.LENGTH_SHORT).show()
+        ));
     }
 
-    // ——— Chart & local DB işlemleri aşağıda aynı şekilde devam ediyor ———
-
-    private void loadRange(Range range) {
-        if (shouldFetchFromApi(range)) {
-            fetchStockData(range);
-        } else {
-            loadStockFromDatabase(range);
-        }
+    // API’dan sahip olunan miktarı çek
+    private void fetchOwnedQuantity() {
+        if (userId < 0) return;
+        String url = BASE_URL + "/portfolio/" + userId + "/" + symbol;
+        Volley.newRequestQueue(this).add(new JsonObjectRequest(
+                Request.Method.GET, url, null,
+                resp -> {
+                    int owned = resp.optInt("quantity", 0);
+                    ownedQuantityText.setText("Owned: " + owned);
+                },
+                err -> ownedQuantityText.setText("Owned: 0")
+        ));
     }
+
+    // Buy isteği
+    private void sendBuyRequest(int qty) {
+        String url = BASE_URL + "/portfolio/buy";
+        Volley.newRequestQueue(this).add(new StringRequest(
+                Request.Method.POST, url,
+                resp -> {
+                    Toast.makeText(this,"Bought "+qty+" shares",Toast.LENGTH_SHORT).show();
+                    fetchUserBalance();
+                    fetchOwnedQuantity();
+                },
+                err -> Toast.makeText(this,"Buy failed",Toast.LENGTH_SHORT).show()
+        ) {
+            @Override protected Map<String,String> getParams() {
+                Map<String,String> p = new HashMap<>();
+                p.put("user_id",    String.valueOf(userId));
+                p.put("stock_code", symbol);
+                p.put("quantity",   String.valueOf(qty));
+                p.put("price",      String.valueOf(currentPrice));
+                return p;
+            }
+        });
+    }
+
+    // Sell isteği
+    private void sendSellRequest(int qty) {
+        String url = BASE_URL + "/portfolio/sell";
+        Volley.newRequestQueue(this).add(new StringRequest(
+                Request.Method.POST, url,
+                resp -> {
+                    Toast.makeText(this,"Sold "+qty+" shares",Toast.LENGTH_SHORT).show();
+                    fetchUserBalance();
+                    fetchOwnedQuantity();
+                },
+                err -> Toast.makeText(this,"Sell failed",Toast.LENGTH_SHORT).show()
+        ) {
+            @Override protected Map<String,String> getParams() {
+                Map<String,String> p = new HashMap<>();
+                p.put("user_id",    String.valueOf(userId));
+                p.put("stock_code", symbol);
+                p.put("quantity",   String.valueOf(qty));
+                p.put("price",      String.valueOf(currentPrice));
+                return p;
+            }
+        });
+    }
+
+    private void loadRange(Range range) { /* … önceki kodunuz */ }
 
     private void ensureTable() {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -191,15 +312,19 @@ public class StockDetailActivity extends AppCompatActivity {
                         int i = 0;
                         while (dates.hasNext() && i < limit) {
                             String date = dates.next();
-                            float close = Float.parseFloat(
+                            float latestClose = Float.parseFloat(
                                     series.getJSONObject(date).getString("4. close")
                             );
-                            entries.add(new Entry(i, close));
-                            closes.add(close);
+
+                            // → burada güncel fiyata aktarıyoruz:
+                            currentPrice = latestClose;
+
+                            entries.add(new Entry(i, latestClose));
+                            closes.add(latestClose);
 
                             db.execSQL(
                                     "REPLACE INTO stock_details(symbol,date,close,freq) VALUES(?,?,?,?)",
-                                    new Object[]{symbol, date, close, range.name()}
+                                    new Object[]{symbol, date, latestClose, range.name()}
                             );
                             i++;
                         }
@@ -217,6 +342,8 @@ public class StockDetailActivity extends AppCompatActivity {
 
         Volley.newRequestQueue(this).add(req);
     }
+
+
 
     private void loadStockFromDatabase(Range range) {
         ensureTable();
