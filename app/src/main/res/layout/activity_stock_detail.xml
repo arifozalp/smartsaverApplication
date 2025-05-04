@@ -12,6 +12,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- Sembol -->
         <TextView
             android:id="@+id/stockSymbol"
             android:layout_width="wrap_content"
@@ -20,6 +21,16 @@
             android:textStyle="bold"
             android:textSize="20sp" />
 
+        <!-- Aralık seçici — daha geniş dokunma alanı -->
+        <Spinner
+            android:id="@+id/rangeSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:paddingVertical="8dp"
+            android:layout_marginTop="8dp"/>
+
+        <!-- Güncel fiyat -->
         <TextView
             android:id="@+id/stockPrice"
             android:layout_width="wrap_content"
@@ -28,6 +39,7 @@
             android:textSize="16sp"
             android:layout_marginTop="4dp" />
 
+        <!-- Değişim -->
         <TextView
             android:id="@+id/stockChange"
             android:layout_width="wrap_content"
@@ -36,10 +48,12 @@
             android:textSize="16sp"
             android:layout_marginBottom="16dp" />
 
+        <!-- Grafik -->
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/lineChart"
             android:layout_width="match_parent"
             android:layout_height="300dp"
             android:layout_marginTop="16dp" />
+
     </LinearLayout>
 </ScrollView>
