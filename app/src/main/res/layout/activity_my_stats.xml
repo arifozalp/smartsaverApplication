@@ -3,13 +3,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/stats_bg"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center_horizontal">
+        android:gravity="center"
+        android:layout_gravity="center">
 
         <TextView
             android:id="@+id/balanceStat"
@@ -18,8 +20,9 @@
             android:text="Balance: $0.00"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:layout_marginBottom="16dp"/>
-        <!-- Başlık -->
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="12dp" />
+
         <TextView
             android:id="@+id/titleStats"
             android:layout_width="wrap_content"
@@ -28,9 +31,8 @@
             android:textSize="22sp"
             android:textStyle="bold"
             android:textColor="@android:color/white"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="20dp" />
 
-        <!-- Logo veya ikon -->
         <ImageView
             android:id="@+id/logo"
             android:layout_width="100dp"
@@ -39,7 +41,6 @@
             android:contentDescription="Logo"
             android:layout_marginBottom="24dp" />
 
-        <!-- İstatistik Kartı -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -47,7 +48,8 @@
             android:background="@drawable/card_background"
             android:padding="24dp"
             android:elevation="6dp"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="24dp"
+            android:layout_gravity="center">
 
             <TextView
                 android:id="@+id/totalInvestment"
@@ -84,16 +86,16 @@
                 android:text="Loss Stocks: 0"
                 android:textColor="#FFCDD2"
                 android:layout_marginBottom="8dp" />
+
             <Button
                 android:id="@+id/btnViewTransfers"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="View Transfers"
-                android:layout_marginTop="24dp"
-                android:layout_gravity="center" />
+                android:textStyle="bold"
+                android:layout_marginTop="24dp" />
         </LinearLayout>
 
-        <!-- Not veya tavsiye -->
         <TextView
             android:id="@+id/tipText"
             android:layout_width="wrap_content"

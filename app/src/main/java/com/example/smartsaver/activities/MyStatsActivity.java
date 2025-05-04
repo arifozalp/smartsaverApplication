@@ -64,7 +64,7 @@ public class MyStatsActivity extends AppCompatActivity {
                     try {
                         double bal = response.getDouble("balance");
                         balanceStat.setText(
-                                String.format(Locale.getDefault(), "Balance: $%.2f", bal)
+                                String.format(Locale.getDefault(), "Balance: ₺%.2f", bal)
                         );
                     } catch (JSONException e) {
                         Toast.makeText(this, "Bakiye verisi okunamadı", Toast.LENGTH_SHORT).show();
@@ -94,10 +94,10 @@ public class MyStatsActivity extends AppCompatActivity {
                         if (p >= 0) posCnt++; else negCnt++;
                     }
                     totalInvestment.setText(
-                            String.format(Locale.getDefault(), "Total Investment: $%.2f", totalInv)
+                            String.format(Locale.getDefault(), "Total Investment: ₺%.2f", totalInv)
                     );
                     totalProfit.setText(
-                            String.format(Locale.getDefault(), "Total Profit: $%.2f", totalProf)
+                            String.format(Locale.getDefault(), "Total Profit: ₺%.2f", totalProf)
                     );
                     positiveCount.setText("Profitable Stocks: " + posCnt);
                     negativeCount.setText("Loss Stocks: " + negCnt);
@@ -122,48 +122,51 @@ public class MyStatsActivity extends AppCompatActivity {
      * Artık hem gönderenin hem de alıcının full_name’lerini kullanıyoruz.
      */
     private void showTransactionsDialog(JSONArray arr) {
-        ArrayList<String> lines = new ArrayList<>();
+        ArrayList<JSONObject> transactionList = new ArrayList<>();
 
         for (int i = 0; i < arr.length(); i++) {
+            JSONObject o = arr.optJSONObject(i);
+            if (o != null) transactionList.add(o);
+        }
+
+        // 📌 Amount'a göre küçükten büyüğe sırala
+        transactionList.sort((o1, o2) -> {
+            double a1 = o1.optDouble("amount", 0);
+            double a2 = o2.optDouble("amount", 0);
+            return Double.compare(a1, a2);
+        });
+
+        ArrayList<String> lines = new ArrayList<>();
+
+        for (JSONObject o : transactionList) {
             try {
-                JSONObject o          = arr.getJSONObject(i);
-                int from              = o.getInt("user_id");
-                int to                = o.getInt("target_user_id");
-                double amt            = o.getDouble("amount");
-                String date           = o.getString("date");
-                String senderName     = o.getString("sender_name");
-                String targetName     = o.getString("target_name");
+                int from          = o.getInt("user_id");
+                int to            = o.getInt("target_user_id");
+                double amt        = o.getDouble("amount");
+                String date       = o.getString("date");
+                String senderName = o.getString("sender_name");
+                String targetName = o.getString("target_name");
 
                 String line;
                 if (from == userId) {
-                    // Bu kullanıcı göndermiş
-                    line = String.format(
-                            Locale.getDefault(),
-                            "Sent $%.2f to %s on %s",
-                            amt, targetName, date
-                    );
+                    line = String.format(Locale.getDefault(),
+                            "Sent ₺%.2f to %s on %s", amt, targetName, date);
                 } else {
-                    // Bu kullanıcı alıcı
-                    line = String.format(
-                            Locale.getDefault(),
-                            "Received $%.2f from %s on %s",
-                            amt, senderName, date
-                    );
+                    line = String.format(Locale.getDefault(),
+                            "Received ₺%.2f from %s on %s", amt, senderName, date);
                 }
-                lines.add(line);
 
+                lines.add(line);
             } catch (JSONException ignored) {}
         }
 
-        if (lines.isEmpty()) {
-            lines.add("No transactions found.");
-        }
+        if (lines.isEmpty()) lines.add("No transactions found.");
 
-        String[] items = lines.toArray(new String[0]);
         new AlertDialog.Builder(this)
                 .setTitle("Transfer History")
-                .setItems(items, null)
+                .setItems(lines.toArray(new String[0]), null)
                 .setPositiveButton("Close", null)
                 .show();
     }
+
 }
