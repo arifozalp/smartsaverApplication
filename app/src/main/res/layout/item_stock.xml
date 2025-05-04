@@ -11,33 +11,61 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/stockName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="AAPL"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:textColor="#000000" />
+        <!-- Logo -->
+        <ImageView
+            android:id="@+id/logoImage"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/logo_turtle"
+            android:layout_marginEnd="16dp"
+            android:contentDescription="Stock Logo" />
 
-        <TextView
-            android:id="@+id/stockPrice"
-            android:layout_width="wrap_content"
+        <!-- Sağ taraf bilgi alanı -->
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Price: $147.32"
-            android:textSize="16sp"
-            android:textColor="#333333" />
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/stockChange"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="+1.25%"
-            android:textSize="14sp"
-            android:textColor="@android:color/holo_green_dark" />
+            <!-- Hisse adı ve kodu -->
+            <TextView
+                android:id="@+id/stockName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AAPL (Apple)"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:textColor="#222222" />
+
+            <!-- Fiyat ve değişim yüzdesi -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp">
+
+                <TextView
+                    android:id="@+id/stockPrice"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="$147.32"
+                    android:textSize="16sp"
+                    android:textColor="#444444" />
+
+                <TextView
+                    android:id="@+id/stockChange"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="+1.25%"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/holo_green_dark" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
-
 </androidx.cardview.widget.CardView>

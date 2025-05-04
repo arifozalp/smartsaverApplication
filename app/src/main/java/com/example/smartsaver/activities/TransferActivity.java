@@ -173,7 +173,7 @@ public class TransferActivity extends AppCompatActivity {
                 response -> {
                     try {
                         double updatedBalance = response.getDouble("balance");
-                        Toast.makeText(this, "Updated Balance: ₺" + updatedBalance, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Updated Balance: $" + updatedBalance, Toast.LENGTH_SHORT).show();
                     } catch (Exception e) {
                         Toast.makeText(this, "Failed to update balance", Toast.LENGTH_SHORT).show();
                     }
@@ -203,7 +203,7 @@ public class TransferActivity extends AppCompatActivity {
 
     private void sendTransferNotification(String toEmail, double amt) {
         String title = "Transfer Completed";
-        String text  = String.format(Locale.getDefault(), "₺%.2f sent to %s", amt, toEmail);
+        String text  = String.format(Locale.getDefault(), "$%.2f sent to %s", amt, toEmail);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_info)

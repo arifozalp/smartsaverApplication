@@ -97,7 +97,7 @@ public class DashboardActivity extends AppCompatActivity {
                 response -> {
                     try {
                         double bal = response.getDouble("balance");
-                        balanceText.setText(String.format("Balance: ₺%.2f", bal));
+                        balanceText.setText(String.format("Balance: $%.2f", bal));
                     } catch (Exception e) {
                         Toast.makeText(this, "Veri çözümleme hatası", Toast.LENGTH_SHORT).show();
                     }

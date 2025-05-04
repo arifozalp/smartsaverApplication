@@ -38,7 +38,7 @@
         android:id="@+id/amountInput"
         android:layout_width="0dp"
         android:layout_height="50dp"
-        android:hint="Amount (₺)"
+        android:hint="Amount ($)"
         android:inputType="numberDecimal"
         android:background="@drawable/rounded_input"
         android:paddingHorizontal="16dp"

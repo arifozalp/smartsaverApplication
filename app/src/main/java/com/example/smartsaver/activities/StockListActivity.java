@@ -36,20 +36,19 @@ import java.util.Locale;
 
 public class StockListActivity extends AppCompatActivity {
 
-    private RecyclerView       stockRecyclerView;
-    private StockAdapter       adapter;
-    private List<Stock>        stockList = new ArrayList<>();
+    private RecyclerView stockRecyclerView;
+    private StockAdapter adapter;
+    private List<Stock> stockList = new ArrayList<>();
 
-    private DBHelper           dbHelper;
-    private final String       API_KEY  = "9UHXBHGRB85774EZ";
-    private final String       BASE_URL = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=";
-    private final String[]     symbols  = {"AAPL", "MSFT", "AMZN", "GOOG", "TSLA", "NVDA", "META", "BABA", "NFLX", "ADBE"};
+    private DBHelper dbHelper;
+    private final String API_KEY = "9UHXBHGRB85774EZ";
+    private final String BASE_URL = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=";
+    private final String[] symbols = {"AAPL", "MSFT", "AMZN", "GOOG", "TSLA", "NVDA", "META", "BABA", "NFLX", "ADBE"};
 
-    // ← new fields to carry user info
-    private int    userId;
+    private int userId;
     private String userEmail;
 
-    private ItemTouchHelper    itemTouchHelper;
+    private ItemTouchHelper itemTouchHelper;
     private GestureDetectorCompat gestureDetector;
 
     @Override
@@ -57,8 +56,7 @@ public class StockListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stock_list);
 
-        // ← pull user info from the Intent
-        userId    = getIntent().getIntExtra("user_id",   -1);
+        userId = getIntent().getIntExtra("user_id", -1);
         userEmail = getIntent().getStringExtra("user_email");
 
         dbHelper = new DBHelper(this);
@@ -67,11 +65,10 @@ public class StockListActivity extends AppCompatActivity {
 
         adapter = new StockAdapter(this, stockList, stock -> {
             Intent intent = new Intent(this, StockDetailActivity.class);
-            intent.putExtra("stock_code",  stock.code);
-            intent.putExtra("stock_name",  stock.name);
-            // ← forward user info too
-            intent.putExtra("user_id",     userId);
-            intent.putExtra("user_email",  userEmail);
+            intent.putExtra("stock_code", stock.code);
+            intent.putExtra("stock_name", stock.name);
+            intent.putExtra("user_id", userId);
+            intent.putExtra("user_email", userEmail);
             startActivity(intent);
         });
         stockRecyclerView.setAdapter(adapter);
@@ -90,7 +87,10 @@ public class StockListActivity extends AppCompatActivity {
                 adapter.notifyItemMoved(from, to);
                 return true;
             }
-            @Override public void onSwiped(RecyclerView.ViewHolder vh, int dir) { }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder vh, int dir) { }
+
             @Override
             public void onSelectedChanged(RecyclerView.ViewHolder vh, int state) {
                 super.onSelectedChanged(vh, state);
@@ -98,6 +98,7 @@ public class StockListActivity extends AppCompatActivity {
                     vh.itemView.setAlpha(0.7f);
                 }
             }
+
             @Override
             public void clearView(RecyclerView rv, RecyclerView.ViewHolder vh) {
                 super.clearView(rv, vh);
@@ -108,13 +109,15 @@ public class StockListActivity extends AppCompatActivity {
         itemTouchHelper.attachToRecyclerView(stockRecyclerView);
 
         gestureDetector = new GestureDetectorCompat(this, new GestureDetector.SimpleOnGestureListener() {
-            @Override public void onLongPress(MotionEvent e) {
+            @Override
+            public void onLongPress(MotionEvent e) {
                 View child = stockRecyclerView.findChildViewUnder(e.getX(), e.getY());
-                if (child!=null) {
+                if (child != null) {
                     RecyclerView.ViewHolder vh = stockRecyclerView.getChildViewHolder(child);
                     itemTouchHelper.startDrag(vh);
                 }
             }
+
             @Override public boolean onSingleTapUp(MotionEvent e) { return true; }
         });
 
@@ -123,15 +126,20 @@ public class StockListActivity extends AppCompatActivity {
                 gestureDetector.onTouchEvent(e);
                 return false;
             }
+
             @Override public void onTouchEvent(RecyclerView rv, MotionEvent e) { }
+
             @Override public void onRequestDisallowInterceptTouchEvent(boolean d) { }
         });
     }
 
     private void loadStocks() {
         for (String sym : symbols) {
-            if (shouldFetchFromApi(sym)) fetchStockDataFromApi(sym);
-            else                        loadStockFromDatabase(sym);
+            if (shouldFetchFromApi(sym)) {
+                fetchStockDataFromApi(sym);
+            } else {
+                loadStockFromDatabase(sym);
+            }
         }
     }
 
@@ -140,8 +148,8 @@ public class StockListActivity extends AppCompatActivity {
         Cursor c = db.rawQuery("SELECT last_updated FROM stocks WHERE symbol=?", new String[]{symbol});
         boolean fetch = true;
         if (c.moveToFirst()) {
-            String last = c.getString(0),
-                    today= new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+            String last = c.getString(0);
+            String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
             fetch = !today.equals(last);
         }
         c.close();
@@ -150,15 +158,13 @@ public class StockListActivity extends AppCompatActivity {
 
     private void loadStockFromDatabase(String symbol) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = db.rawQuery(
-                "SELECT symbol,name,price,change_percent FROM stocks WHERE symbol=?",
-                new String[]{symbol}
-        );
+        Cursor c = db.rawQuery("SELECT symbol,name,price,change_percent FROM stocks WHERE symbol=?",
+                new String[]{symbol});
         if (c.moveToFirst()) {
             Stock s = new Stock();
-            s.code          = c.getString(0);
-            s.name          = c.getString(1);
-            s.price         = c.getDouble(2);
+            s.code = c.getString(0);
+            s.name = c.getString(1);
+            s.price = c.getDouble(2);
             s.changePercent = c.getDouble(3);
             stockList.add(s);
             adapter.notifyDataSetChanged();
@@ -171,7 +177,7 @@ public class StockListActivity extends AppCompatActivity {
         JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, url, null,
                 resp -> {
                     try {
-                        JSONObject ts    = resp.getJSONObject("Time Series (Daily)");
+                        JSONObject ts = resp.getJSONObject("Time Series (Daily)");
                         Iterator<String> dates = ts.keys();
                         if (!dates.hasNext()) return;
                         String latest = dates.next();
@@ -179,29 +185,29 @@ public class StockListActivity extends AppCompatActivity {
                         if (!dates.hasNext()) return;
                         String prev = dates.next();
                         double close2 = Double.parseDouble(ts.getJSONObject(prev).getString("4. close"));
-                        double pct = ((close1 - close2)/close2)*100;
+                        double pct = ((close1 - close2) / close2) * 100;
 
                         Stock s = new Stock();
-                        s.code          = symbol;
-                        s.name          = symbol;
-                        s.price         = close1;
+                        s.code = symbol;
+                        s.name = symbol;
+                        s.price = close1;
                         s.changePercent = pct;
 
                         stockList.add(s);
                         adapter.notifyDataSetChanged();
                         saveStockToDatabase(s);
                     } catch (JSONException e) {
-                        Toast.makeText(this,"Parse error: "+symbol,Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Parse error: " + symbol, Toast.LENGTH_SHORT).show();
                     }
                 },
-                err -> Toast.makeText(this,"API error: "+symbol,Toast.LENGTH_SHORT).show()
+                err -> Toast.makeText(this, "API error: " + symbol, Toast.LENGTH_SHORT).show()
         );
         Volley.newRequestQueue(this).add(req);
     }
 
     private void saveStockToDatabase(Stock stock) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        String today = new SimpleDateFormat("yyyy-MM-dd",Locale.getDefault()).format(new Date());
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
         db.execSQL("REPLACE INTO stocks(symbol,name,price,change_percent,last_updated) VALUES(?,?,?,?,?)",
                 new Object[]{stock.code, stock.name, stock.price, stock.changePercent, today});
     }

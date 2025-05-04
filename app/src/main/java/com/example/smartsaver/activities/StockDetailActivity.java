@@ -108,15 +108,15 @@ public class StockDetailActivity extends AppCompatActivity {
             @Override public void afterTextChanged(Editable s) {
                 String qs = s.toString();
                 if (qs.isEmpty() || currentPrice <= 0) {
-                    totalCostText.setText("Total: ₺0.00");
+                    totalCostText.setText("Total: $0.00");
                     return;
                 }
                 try {
                     double qty = Double.parseDouble(qs);
                     double total = qty * currentPrice;
-                    totalCostText.setText(String.format(Locale.getDefault(),"Total: ₺%.2f", total));
+                    totalCostText.setText(String.format(Locale.getDefault(),"Total: $%.2f", total));
                 } catch (NumberFormatException e) {
-                    totalCostText.setText("Total: ₺0.00");
+                    totalCostText.setText("Total: $0.00");
                 }
             }
         });
@@ -172,7 +172,7 @@ public class StockDetailActivity extends AppCompatActivity {
                     try {
                         double bal = resp.getDouble("balance");
                         userBalanceText.setText(
-                                String.format(Locale.getDefault(),"Balance: ₺%.2f", bal)
+                                String.format(Locale.getDefault(),"Balance: $%.2f", bal)
                         );
                     } catch (JSONException e) {
                         Toast.makeText(this,"Balance parse error",Toast.LENGTH_SHORT).show();
@@ -372,7 +372,7 @@ public class StockDetailActivity extends AppCompatActivity {
             float last = closes.get(0), prev = closes.get(1);
             float change = ((last - prev) / prev) * 100;
             stockPrice.setText(
-                    String.format(Locale.getDefault(),"Price: ₺%.2f", last)
+                    String.format(Locale.getDefault(),"Price: $%.2f", last)
             );
             stockChange.setText(
                     String.format(Locale.getDefault(),"Change: %.2f%%", change)
