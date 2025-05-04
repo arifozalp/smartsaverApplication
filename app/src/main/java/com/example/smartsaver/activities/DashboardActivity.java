@@ -6,7 +6,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
@@ -16,90 +15,95 @@ import com.example.smartsaver.R;
 
 public class DashboardActivity extends AppCompatActivity {
 
-    private TextView welcomeText, balanceText;
-    private LinearLayout btnTransfer, btnSmartPlan, btnStocks, btnMyStats;
+    private TextView   welcomeText;
+    private TextView   balanceText;
+    private LinearLayout btnTransfer;
+    private LinearLayout btnSmartPlan;
+    private LinearLayout btnStocks;
+    private LinearLayout btnMyStats;
 
-    private int userId;
+    private int    userId;
     private String userEmail;
-    private final String BASE_URL = "http://10.0.2.2:3000";
+    private static final String BASE_URL = "http://10.0.2.2:3000";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
 
-        // View tanımlamaları
-        welcomeText = findViewById(R.id.welcomeText);
-        balanceText = findViewById(R.id.balanceText);
-        btnTransfer = findViewById(R.id.btnTransfer);
-        btnSmartPlan = findViewById(R.id.btnSmartPlan);
-        btnStocks = findViewById(R.id.btnStocks);
-        btnMyStats = findViewById(R.id.btnMyStats);
+        // --- view binding ---
+        welcomeText   = findViewById(R.id.welcomeText);
+        balanceText   = findViewById(R.id.balanceText);
+        btnTransfer   = findViewById(R.id.btnTransfer);
+        btnSmartPlan  = findViewById(R.id.btnSmartPlan);
+        btnStocks     = findViewById(R.id.btnStocks);
+        btnMyStats    = findViewById(R.id.btnMyStats);
 
-        // Login ekranından gelen kullanıcı bilgileri
-        userId = getIntent().getIntExtra("user_id", -1);
+        // --- pull user info from Intent ---
+        userId    = getIntent().getIntExtra("user_id",   -1);
         userEmail = getIntent().getStringExtra("user_email");
 
-        welcomeText.setText("Welcome, " + userEmail);
-
-        if (userId != -1) {
-            fetchUserBalance(userId);
-        } else {
-            Toast.makeText(this, "Kullanıcı bilgisi alınamadı", Toast.LENGTH_SHORT).show();
+        if (userId < 0 || userEmail == null) {
+            Toast.makeText(this, "Kullanıcı bilgisi alınamadı", Toast.LENGTH_LONG).show();
+            finish();
+            return;
         }
 
-        // Tıklama işlemleri
+        welcomeText.setText("Welcome, " + userEmail);
+        fetchUserBalance();  // initial load
+
+        // --- set up button listeners ---
         btnTransfer.setOnClickListener(v -> {
-            Intent intent = new Intent(this, TransferActivity.class);
-            intent.putExtra("user_id", userId);
-            intent.putExtra("user_email", userEmail);
-            startActivityForResult(intent, 1001); // transfer sonucu için
+            Intent i = new Intent(this, TransferActivity.class);
+            i.putExtra("user_id",    userId);
+            i.putExtra("user_email", userEmail);
+            startActivityForResult(i, 1001);
         });
 
         btnSmartPlan.setOnClickListener(v -> {
-            Intent intent = new Intent(this, SmartPlanActivity.class);
-            intent.putExtra("user_id", userId);
-            intent.putExtra("user_email", userEmail);
-            startActivity(intent);
+            Intent i = new Intent(this, SmartPlanActivity.class);
+            i.putExtra("user_id",    userId);
+            i.putExtra("user_email", userEmail);
+            startActivity(i);
         });
 
         btnStocks.setOnClickListener(v -> {
-            Intent intent = new Intent(this, StockListActivity.class);
-            startActivity(intent);
+            Intent i = new Intent(this, StockListActivity.class);
+            i.putExtra("user_id",    userId);
+            i.putExtra("user_email", userEmail);
+            startActivity(i);
         });
 
         btnMyStats.setOnClickListener(v -> {
-            Intent intent = new Intent(this, MyStatsActivity.class);
-            intent.putExtra("user_id", userId);
-            startActivity(intent);
+            Intent i = new Intent(this, MyStatsActivity.class);
+            i.putExtra("user_id",    userId);
+            i.putExtra("user_email", userEmail);
+            startActivity(i);
         });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Dashboard yeniden görünür olduğunda bakiyeyi güncelle
-        if (userId != -1) {
-            fetchUserBalance(userId);
-        }
+        // refresh balance whenever dashboard returns to foreground
+        fetchUserBalance();
     }
 
-    private void fetchUserBalance(int id) {
-        String url = BASE_URL + "/user_profiles/" + id;
-
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+    /** Fetches the latest balance from /user_profiles/:id and updates UI */
+    private void fetchUserBalance() {
+        String url = BASE_URL + "/user_profiles/" + userId;
+        JsonObjectRequest req = new JsonObjectRequest(
+                Request.Method.GET, url, null,
                 response -> {
                     try {
-                        double balance = response.getDouble("balance");
-                        balanceText.setText("Balance: ₺" + String.format("%.2f", balance));
+                        double bal = response.getDouble("balance");
+                        balanceText.setText(String.format("Balance: ₺%.2f", bal));
                     } catch (Exception e) {
                         Toast.makeText(this, "Veri çözümleme hatası", Toast.LENGTH_SHORT).show();
                     }
                 },
-                error -> {
-                    Toast.makeText(this, "Sunucu bağlantısı başarısız", Toast.LENGTH_SHORT).show();
-                });
-
-        Volley.newRequestQueue(this).add(request);
+                error -> Toast.makeText(this, "Sunucu bağlantısı başarısız", Toast.LENGTH_SHORT).show()
+        );
+        Volley.newRequestQueue(this).add(req);
     }
 }

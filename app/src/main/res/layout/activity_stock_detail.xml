@@ -21,14 +21,14 @@
             android:textStyle="bold"
             android:textSize="20sp" />
 
-        <!-- Aralık seçici — daha geniş dokunma alanı -->
+        <!-- Aralık seçici — daha geniş dokunma alanı -->
         <Spinner
             android:id="@+id/rangeSpinner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="48dp"
             android:paddingVertical="8dp"
-            android:layout_marginTop="8dp"/>
+            android:layout_marginTop="8dp" />
 
         <!-- Güncel fiyat -->
         <TextView
@@ -54,6 +54,57 @@
             android:layout_width="match_parent"
             android:layout_height="300dp"
             android:layout_marginTop="16dp" />
+
+        <!-- Kullanıcının bakiyesini göster -->
+        <TextView
+            android:id="@+id/userBalance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Balance: ₺0.00"
+            android:textSize="16sp"
+            android:layout_marginTop="8dp" />
+
+        <!-- Miktar girme -->
+        <EditText
+            android:id="@+id/inputQuantity"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter quantity"
+            android:inputType="numberDecimal"
+            android:layout_marginTop="16dp" />
+
+        <!-- Toplam tutar gösterimi -->
+        <TextView
+            android:id="@+id/totalCostText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Total: ₺0.00"
+            android:textSize="16sp"
+            android:layout_marginTop="8dp" />
+
+        <!-- Kullanıcıda bulunan hisse miktarı -->
+        <TextView
+            android:id="@+id/ownedQuantityText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Owned: 0"
+            android:textSize="16sp"
+            android:layout_marginTop="8dp" />
+
+        <!-- Alım & Satım butonları -->
+        <Button
+            android:id="@+id/btnBuy"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Buy"
+            android:layout_marginTop="8dp" />
+
+        <Button
+            android:id="@+id/btnSell"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sell"
+            android:layout_marginTop="4dp" />
 
     </LinearLayout>
 </ScrollView>
