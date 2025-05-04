@@ -26,7 +26,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private EditText emailInput, passwordInput;
     private Button loginButton;
-    private TextView registerRedirect;
+    private TextView registerRedirect, registerClickable;
     private CheckBox rememberCheckbox;
 
     private final String BASE_URL = "http://10.0.2.2:3000";
@@ -41,6 +41,7 @@ public class LoginActivity extends AppCompatActivity {
         passwordInput = findViewById(R.id.passwordInput);
         loginButton = findViewById(R.id.loginButton);
         registerRedirect = findViewById(R.id.registerRedirect);
+        registerClickable = findViewById(R.id.registerClickable); // EKLENDİ
         rememberCheckbox = findViewById(R.id.rememberCheckbox);
 
         // SharedPreferences ile kaydedilen email varsa yükle
@@ -64,7 +65,10 @@ public class LoginActivity extends AppCompatActivity {
             validateLogin(email, password);
         });
 
-        registerRedirect.setOnClickListener(v -> {
+        // Hem üst yazıya hem "Register" yazısına tıklanabilirlik EKLENDİ
+
+
+        registerClickable.setOnClickListener(v -> {
             startActivity(new Intent(this, RegisterActivity.class));
             finish();
         });
@@ -85,7 +89,6 @@ public class LoginActivity extends AppCompatActivity {
                         int userId = response.getInt("id");
                         String userEmail = response.getString("email");
 
-                        // Eğer checkbox işaretliyse email’i kaydet
                         SharedPreferences.Editor editor = getSharedPreferences(PREF_NAME, MODE_PRIVATE).edit();
                         if (rememberCheckbox.isChecked()) {
                             editor.putString("email", userEmail);
