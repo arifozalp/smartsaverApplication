@@ -8,7 +8,6 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.smartsaver.R;
-import com.example.smartsaver.utils.RiskEvaluator;
 
 public class SuggestionResultActivity extends AppCompatActivity {
 
@@ -41,6 +40,7 @@ public class SuggestionResultActivity extends AppCompatActivity {
         String stockSymbol = intent.getStringExtra("stock_symbol");
         String stockName   = intent.getStringExtra("stock_name");
         double stockPrice  = intent.getDoubleExtra("stock_price", 0);
+        String stockNote   = intent.getStringExtra("stock_note");
 
         // Plan özeti
         planSummary.setText("You plan to invest ₺" + amount + " for a " + duration.toLowerCase() +
@@ -48,22 +48,20 @@ public class SuggestionResultActivity extends AppCompatActivity {
 
         // Öneri metni
         String recommendation = "We recommend buying stock \"" + stockName + "\" (" + stockSymbol +
-                ") currently priced at $" + stockPrice + ".\n\n" +
-                "Hold it for the next 2-3 weeks and review performance before selling.\n" +
-                "This selection fits your risk level and investment capacity.";
+                ") currently priced at $" + stockPrice + ".\n\n" + stockNote;
 
         recommendationText.setText(recommendation);
 
         // Risk kutusu renklendirme
         riskLevelBox.setText("Risk Level: " + risk);
-        switch (risk) {
-            case "Low":
+        switch (risk.toLowerCase()) {
+            case "low":
                 riskLevelBox.setBackgroundColor(getResources().getColor(android.R.color.holo_green_dark));
                 break;
-            case "Medium":
+            case "medium":
                 riskLevelBox.setBackgroundColor(getResources().getColor(android.R.color.holo_orange_dark));
                 break;
-            case "High":
+            case "high":
                 riskLevelBox.setBackgroundColor(getResources().getColor(android.R.color.holo_red_dark));
                 break;
             default:
