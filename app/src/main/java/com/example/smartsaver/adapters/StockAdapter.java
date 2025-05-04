@@ -64,16 +64,16 @@ public class StockAdapter extends RecyclerView.Adapter<StockAdapter.StockViewHol
 
     private int getLogoResId(String symbol) {
         switch (symbol.toUpperCase()) {
-            case "AAPL": return R.drawable.apple;
-            case "MSFT": return R.drawable.microsoft;
-            case "GOOG": return R.drawable.google;
-            case "AMZN": return R.drawable.amazon;
-            case "TSLA": return R.drawable.tesla;
-            case "NVDA": return R.drawable.nvdia;
-            case "META": return R.drawable.meta;
-            case "BABA": return R.drawable.alibaba;
-            case "NFLX": return R.drawable.netflix;
-            case "ADBE": return R.drawable.adobe;
+            case "AAPL.US": return R.drawable.apple;
+            case "MSFT.US": return R.drawable.microsoft;
+            case "GOOG.US": return R.drawable.google;
+            case "AMZN.US": return R.drawable.amazon;
+            case "TSLA.US": return R.drawable.tesla;
+            case "NVDA.US": return R.drawable.nvdia;
+            case "META.US": return R.drawable.meta;
+            case "BABA.US": return R.drawable.alibaba;
+            case "NFLX.US": return R.drawable.netflix;
+            case "ADBE.US": return R.drawable.adobe;
             default: return R.drawable.logo_turtle;
         }
     }

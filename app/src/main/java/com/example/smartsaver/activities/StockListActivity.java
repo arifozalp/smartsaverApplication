@@ -31,9 +31,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Stooq tabanlı hisse listesi – Alpha Vantage bağımlılığı kaldırıldı.
- */
 public class StockListActivity extends AppCompatActivity {
 
     private RecyclerView       stockRecyclerView;
@@ -46,9 +43,7 @@ public class StockListActivity extends AppCompatActivity {
     private static final String[] SYMBOLS = {
             "AAPL.US","MSFT.US","AMZN.US","GOOG.US","TSLA.US",
             "NVDA.US","META.US","BABA.US","NFLX.US","ADBE.US"
-            // BIST eklemek isterseniz: "ASELS.TR","TUPRS.TR" ...
     };
-    /* ---------------------------------------------------- */
 
     private int    userId;
     private String userEmail;
