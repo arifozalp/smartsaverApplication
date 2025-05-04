@@ -43,7 +43,7 @@ public class SuggestionResultActivity extends AppCompatActivity {
         String stockNote   = intent.getStringExtra("stock_note");
 
         // Plan özeti
-        planSummary.setText("You plan to invest ₺" + amount + " for a " + duration.toLowerCase() +
+        planSummary.setText("You plan to invest $" + amount + " for a " + duration.toLowerCase() +
                 " term with a " + risk.toLowerCase() + " risk level towards: " + goal + ".");
 
         // Öneri metni

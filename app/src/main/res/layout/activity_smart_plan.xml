@@ -34,7 +34,7 @@
         android:id="@+id/inputAmount"
         android:layout_width="0dp"
         android:layout_height="50dp"
-        android:hint="Investment Amount (â‚º)"
+        android:hint="Investment Amount ($)"
         android:background="@drawable/rounded_input"
         android:inputType="numberDecimal"
         android:textColor="@android:color/white"

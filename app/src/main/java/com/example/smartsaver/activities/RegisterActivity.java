@@ -31,14 +31,13 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // View tanımlamaları
+        // ID'lere göre eşleşme yapıyoruz
         fullNameInput = findViewById(R.id.nameInput);
         emailInput = findViewById(R.id.emailInput);
         passwordInput = findViewById(R.id.passwordInput);
         registerButton = findViewById(R.id.registerButton);
         loginRedirect = findViewById(R.id.loginRedirect);
 
-        // Kayıt işlemi
         registerButton.setOnClickListener(v -> {
             String fullName = fullNameInput.getText().toString().trim();
             String email = emailInput.getText().toString().trim();
@@ -52,7 +51,6 @@ public class RegisterActivity extends AppCompatActivity {
             registerUser(email, password, fullName);
         });
 
-        // Sadece Login yazısına tıklanabilirlik
         loginRedirect.setOnClickListener(v -> {
             startActivity(new Intent(this, LoginActivity.class));
             finish();
@@ -72,9 +70,9 @@ public class RegisterActivity extends AppCompatActivity {
                     error.printStackTrace();
                     if (error.networkResponse != null && error.networkResponse.data != null) {
                         String errorMsg = new String(error.networkResponse.data);
-                        Toast.makeText(this, "Error: " + errorMsg, Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "Hata: " + errorMsg, Toast.LENGTH_LONG).show();
                     } else {
-                        Toast.makeText(this, "Server error", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Sunucuya erişilemedi", Toast.LENGTH_SHORT).show();
                     }
                 }
         ) {
