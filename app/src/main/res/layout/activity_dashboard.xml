@@ -12,7 +12,6 @@
         android:orientation="vertical"
         android:gravity="center_horizontal">
 
-        <!-- Karşılama -->
         <TextView
             android:id="@+id/welcomeText"
             android:layout_width="wrap_content"
@@ -24,7 +23,6 @@
             android:layout_marginTop="24dp"
             android:layout_marginBottom="8dp" />
 
-        <!-- Bakiye -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -49,7 +47,6 @@
         </LinearLayout>
 
 
-        <!-- Üstteki 2 buton -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -114,14 +111,12 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Logo -->
         <ImageView
             android:layout_width="120dp"
             android:layout_height="120dp"
             android:src="@drawable/logo_turtle"
             android:layout_marginBottom="32dp" />
 
-        <!-- Alttaki 2 buton -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

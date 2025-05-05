@@ -6,7 +6,6 @@
     android:background="@drawable/login_bg"
     android:padding="24dp">
 
-    <!-- Logo -->
     <ImageView
         android:id="@+id/registerLogo"
         android:layout_width="120dp"
@@ -17,7 +16,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="64dp" />
 
-    <!-- Başlık -->
     <TextView
         android:id="@+id/registerTitle"
         android:layout_width="wrap_content"
@@ -43,7 +41,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="4dp" />
 
-    <!-- Name -->
     <EditText
         android:id="@+id/nameInput"
         android:layout_width="0dp"
@@ -58,7 +55,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="24dp" />
 
-    <!-- Email -->
     <EditText
         android:id="@+id/emailInput"
         android:layout_width="0dp"
@@ -74,7 +70,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="12dp" />
 
-    <!-- Password -->
     <EditText
         android:id="@+id/passwordInput"
         android:layout_width="0dp"
@@ -90,7 +85,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="12dp" />
 
-    <!-- Register Button -->
     <Button
         android:id="@+id/registerButton"
         android:layout_width="0dp"
@@ -105,7 +99,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp" />
 
-    <!-- Giriş yönlendirmesi -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

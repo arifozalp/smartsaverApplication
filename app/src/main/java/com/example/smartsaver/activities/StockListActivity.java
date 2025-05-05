@@ -39,7 +39,6 @@ public class StockListActivity extends AppCompatActivity {
 
     private DBHelper           dbHelper;
 
-    /* ---------------------------------------------------- */
     private static final String[] SYMBOLS = {
             "AAPL.US","MSFT.US","AMZN.US","GOOG.US","TSLA.US",
             "NVDA.US","META.US","BABA.US","NFLX.US","ADBE.US"
@@ -51,7 +50,6 @@ public class StockListActivity extends AppCompatActivity {
     private ItemTouchHelper       itemTouchHelper;
     private GestureDetectorCompat gestureDetector;
 
-    /* ============================ lifecycle ================================ */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,7 +77,6 @@ public class StockListActivity extends AppCompatActivity {
         loadStocks();
     }
 
-    /* ============================ drag & drop ============================== */
     private void initGestureDrag() {
         ItemTouchHelper.SimpleCallback cb = new ItemTouchHelper.SimpleCallback(
                 ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
@@ -117,7 +114,6 @@ public class StockListActivity extends AppCompatActivity {
         });
     }
 
-    /* ============================ veri akışı ================================= */
     private void loadStocks() {
         for (String sym : SYMBOLS) {
             if (shouldFetchFromApi(sym)) fetchStockData(sym);
@@ -138,7 +134,6 @@ public class StockListActivity extends AppCompatActivity {
         return fetch;
     }
 
-    /* ============================ Stooq fetch ============================== */
     private String stooqUrl(String sym) {
         return "https://stooq.com/q/d/l/?s=" + sym.toLowerCase() + "&i=d";
     }
@@ -152,7 +147,6 @@ public class StockListActivity extends AppCompatActivity {
                         Toast.makeText(this,"Stooq: no data "+symbol,Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    /* --- CSV eski→yeni -> sondan başla --- */
                     String[] latest = rows[rows.length-1].split(",");
                     String[] prev   = rows[rows.length-2].split(",");
 
@@ -174,8 +168,6 @@ public class StockListActivity extends AppCompatActivity {
         );
         Volley.newRequestQueue(this).add(req);
     }
-
-    /* ============================ DB işlemleri ============================= */
     private void loadStockFromDatabase(String symbol) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         Cursor c = db.rawQuery(

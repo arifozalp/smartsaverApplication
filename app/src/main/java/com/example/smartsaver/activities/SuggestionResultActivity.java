@@ -28,7 +28,6 @@ public class SuggestionResultActivity extends AppCompatActivity {
         riskLevelBox = findViewById(R.id.riskLevelBox);
         backButton = findViewById(R.id.backButton);
 
-        // Gelen verileri al
         Intent intent = getIntent();
         userEmail = intent.getStringExtra("user_email");
         amount = intent.getDoubleExtra("amount", 0);
@@ -36,23 +35,19 @@ public class SuggestionResultActivity extends AppCompatActivity {
         risk = intent.getStringExtra("risk");
         goal = intent.getStringExtra("goal");
 
-        // Yeni eklenen hisse bilgileri
         String stockSymbol = intent.getStringExtra("stock_symbol");
         String stockName   = intent.getStringExtra("stock_name");
         double stockPrice  = intent.getDoubleExtra("stock_price", 0);
         String stockNote   = intent.getStringExtra("stock_note");
 
-        // Plan özeti
         planSummary.setText("You plan to invest $" + amount + " for a " + duration.toLowerCase() +
                 " term with a " + risk.toLowerCase() + " risk level towards: " + goal + ".");
 
-        // Öneri metni
         String recommendation = "We recommend buying stock \"" + stockName + "\" (" + stockSymbol +
                 ") currently priced at $" + stockPrice + ".\n\n" + stockNote;
 
         recommendationText.setText(recommendation);
 
-        // Risk kutusu renklendirme
         riskLevelBox.setText("Risk Level: " + risk);
         switch (risk.toLowerCase()) {
             case "low":
@@ -68,7 +63,6 @@ public class SuggestionResultActivity extends AppCompatActivity {
                 riskLevelBox.setBackgroundColor(getResources().getColor(android.R.color.darker_gray));
         }
 
-        // Geri dön butonu
         backButton.setOnClickListener(v -> {
             Intent backIntent = new Intent(this, DashboardActivity.class);
             backIntent.putExtra("user_email", userEmail);

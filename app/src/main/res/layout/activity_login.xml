@@ -7,7 +7,6 @@
     android:background="@drawable/login_bg"
     android:padding="24dp">
 
-    <!-- Logo -->
     <ImageView
         android:id="@+id/logoImage"
         android:layout_width="150dp"
@@ -18,7 +17,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="60dp"/>
 
-    <!-- Başlık -->
     <TextView
         android:id="@+id/loginTitle"
         android:layout_width="wrap_content"
@@ -32,7 +30,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp"/>
 
-    <!-- Email -->
     <EditText
         android:id="@+id/emailInput"
         android:layout_width="0dp"
@@ -48,7 +45,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="24dp"/>
 
-    <!-- Password -->
     <EditText
         android:id="@+id/passwordInput"
         android:layout_width="0dp"
@@ -64,7 +60,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="12dp"/>
 
-    <!-- Remember Me -->
     <CheckBox
         android:id="@+id/rememberCheckbox"
         android:layout_width="wrap_content"
@@ -77,7 +72,6 @@
         app:layout_constraintStart_toStartOf="parent"/>
 
 
-    <!-- Login Butonu -->
     <Button
         android:id="@+id/loginButton"
         android:layout_width="0dp"
@@ -92,7 +86,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp"/>
 
-    <!-- Register yönlendirme -->
 
     <TextView
         android:id="@+id/registerRedirect"

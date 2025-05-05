@@ -26,11 +26,9 @@ import java.util.Locale;
 
 public class MyStatsActivity extends AppCompatActivity {
 
-    /* ---------- UI ---------- */
     private TextView balanceStat, totalInvestment, totalProfit, positiveCount, negativeCount;
     private Button   btnViewTransfers, btnViewHoldings;
 
-    /* ---------- Data ---------- */
     private int userId;
     private static final String BASE_URL = "http://10.0.2.2:3000";
 
@@ -40,7 +38,6 @@ public class MyStatsActivity extends AppCompatActivity {
     }
     private final ArrayList<StockItem> holdings = new ArrayList<>();
 
-    /* ---------- Periodic refresh (5 s) ---------- */
     private final Handler refreshHandler = new Handler(Looper.getMainLooper());
     private final Runnable refreshTask   = new Runnable() {
         @Override public void run() {
@@ -49,7 +46,6 @@ public class MyStatsActivity extends AppCompatActivity {
         }
     };
 
-    /* =================================================================== */
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_stats);
@@ -72,7 +68,6 @@ public class MyStatsActivity extends AppCompatActivity {
         btnViewHoldings .setOnClickListener(v -> showHoldingsDialog());
     }
 
-    /* ---------- Lifecycle ---------- */
     @Override protected void onResume() {
         super.onResume();
         refreshHandler.post(refreshTask);
@@ -82,7 +77,6 @@ public class MyStatsActivity extends AppCompatActivity {
         refreshHandler.removeCallbacks(refreshTask);
     }
 
-    /* ---------- Balance ---------- */
     private void fetchBalance() {
         String url = BASE_URL + "/user_profiles/" + userId;
         JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, url, null,
@@ -97,7 +91,6 @@ public class MyStatsActivity extends AppCompatActivity {
         Volley.newRequestQueue(this).add(req);
     }
 
-    /* ---------- Portfolio & prices ---------- */
     private void fetchPortfolio() {
         String url = BASE_URL + "/portfolio/" + userId;
         JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, url, null,
@@ -163,7 +156,6 @@ public class MyStatsActivity extends AppCompatActivity {
         negativeCount.setText("Loss Stocks: " + negCnt);
     }
 
-    /* ---------- Holdings dialog ---------- */
     private void showHoldingsDialog() {
         if (holdings.isEmpty()) { Toast.makeText(this,"No holdings",Toast.LENGTH_SHORT).show(); return; }
         ArrayList<String> lines = new ArrayList<>();
@@ -184,7 +176,6 @@ public class MyStatsActivity extends AppCompatActivity {
     }
 
 
-    /* ---------- Transfers ---------- */
     private void fetchTransactions() {
         String url = BASE_URL + "/transactions/" + userId;
         JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, url, null,

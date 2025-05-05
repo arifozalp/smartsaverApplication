@@ -23,11 +23,9 @@ public class SplashActivity extends AppCompatActivity {
 
         splashLogo = findViewById(R.id.splashLogo);
 
-        // Fade-in animasyonu (isteğe bağlı)
         Animation fadeIn = AnimationUtils.loadAnimation(this, R.anim.fade_in);
         splashLogo.startAnimation(fadeIn);
 
-        // Gecikmeli olarak LoginActivity'ye geç
         new Handler().postDelayed(() -> {
             Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
             startActivity(intent);

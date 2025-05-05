@@ -33,7 +33,6 @@ public class DashboardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
 
-        // --- view binding ---
         welcomeText   = findViewById(R.id.welcomeText);
         balanceText   = findViewById(R.id.balanceText);
         btnTransfer   = findViewById(R.id.btnTransfer);
@@ -41,7 +40,6 @@ public class DashboardActivity extends AppCompatActivity {
         btnStocks     = findViewById(R.id.btnStocks);
         btnMyStats    = findViewById(R.id.btnMyStats);
 
-        // --- pull user info from Intent ---
         userId    = getIntent().getIntExtra("user_id",   -1);
         userEmail = getIntent().getStringExtra("user_email");
 
@@ -50,9 +48,8 @@ public class DashboardActivity extends AppCompatActivity {
             finish();
             return;
         }
-        fetchUserBalance();  // initial load
+        fetchUserBalance();
 
-        // --- set up button listeners ---
         btnTransfer.setOnClickListener(v -> {
             Intent i = new Intent(this, TransferActivity.class);
             i.putExtra("user_id",    userId);
@@ -95,8 +92,7 @@ public class DashboardActivity extends AppCompatActivity {
                     i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK |
                             Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(i);
-                    finish();               // Dashboard'u kapat
-                    // super.onBackPressed();  // İstersen burada çağırabilirsin
+                    finish();
                 })
                 .show();
     }
@@ -104,11 +100,9 @@ public class DashboardActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // refresh balance whenever dashboard returns to foreground
         fetchUserBalance();
     }
 
-    /** Fetches the latest balance from /user_profiles/:id and updates UI */
     private void fetchUserBalance() {
         String url = BASE_URL + "/user_profiles/" + userId;
         JsonObjectRequest req = new JsonObjectRequest(

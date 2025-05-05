@@ -34,6 +34,7 @@ android {
 
 
 dependencies {
+    implementation("androidx.work:work-runtime:2.9.0")
     implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation ("com.android.volley:volley:1.2.1")
     implementation(libs.appcompat)

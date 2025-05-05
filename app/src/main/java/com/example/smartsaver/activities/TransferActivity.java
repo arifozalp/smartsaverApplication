@@ -47,7 +47,6 @@ public class TransferActivity extends AppCompatActivity {
 
     private final String BASE_URL = "http://10.0.2.2:3000";
 
-    // launcher for the permission dialog (Android 13+)
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (!isGranted) {
@@ -97,7 +96,6 @@ public class TransferActivity extends AppCompatActivity {
         });
     }
 
-    /** On Android 13+ we must request POST_NOTIFICATIONS at runtime */
     private void ensureNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)

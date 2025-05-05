@@ -13,7 +13,6 @@
         android:layout_marginTop="48dp">
 
 
-        <!-- Başlık -->
         <TextView
             android:id="@+id/resultTitle"
             android:layout_width="wrap_content"
@@ -24,7 +23,6 @@
             android:textColor="@android:color/white"
             android:layout_marginBottom="24dp" />
 
-        <!-- Plan Özeti -->
         <TextView
             android:id="@+id/planSummary"
             android:layout_width="match_parent"
@@ -34,7 +32,6 @@
             android:textColor="@android:color/white"
             android:layout_marginBottom="16dp" />
 
-        <!-- Önerilen Yatırım -->
         <TextView
             android:id="@+id/recommendationTitle"
             android:layout_width="wrap_content"
@@ -54,8 +51,6 @@
             android:textSize="16sp"
             android:textColor="@android:color/white"
             android:layout_marginBottom="24dp" />
-
-        <!-- Risk Durumu Kutusu -->
         <TextView
             android:id="@+id/riskLevelBox"
             android:layout_width="match_parent"
@@ -69,7 +64,6 @@
             android:layout_marginTop="8dp"
             android:layout_marginBottom="16dp" />
 
-        <!-- Geri dön butonu -->
         <Button
             android:id="@+id/backButton"
             android:layout_width="match_parent"

@@ -1,9 +1,12 @@
 package com.example.smartsaver.activities;
 
+import static androidx.constraintlayout.widget.Constraints.TAG;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -16,6 +19,7 @@ import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.smartsaver.R;
+import com.example.smartsaver.backgroundServices.TransferMonitorService;
 
 import org.json.JSONObject;
 
@@ -23,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
-
+    private static final String TAG = "Login";
     private EditText emailInput, passwordInput;
     private Button loginButton;
     private TextView registerRedirect, registerClickable;
@@ -44,7 +48,6 @@ public class LoginActivity extends AppCompatActivity {
         registerClickable = findViewById(R.id.registerClickable);
         rememberCheckbox = findViewById(R.id.rememberCheckbox);
 
-        // SharedPreferences ile kaydedilen email varsa yükle
         SharedPreferences preferences = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
         String savedEmail = preferences.getString("email", "");
         boolean isRemembered = preferences.getBoolean("remember", false);
@@ -65,8 +68,6 @@ public class LoginActivity extends AppCompatActivity {
             validateLogin(email, password);
         });
 
-        // Hem üst yazıya hem "Register" yazısına tıklanabilirlik EKLENDİ
-
 
         registerClickable.setOnClickListener(v -> {
             startActivity(new Intent(this, RegisterActivity.class));
@@ -79,6 +80,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void validateLogin(String email, String password) {
+        Log.d(TAG, "validateLogin called");
         String url = BASE_URL + "/login";
 
         Map<String, String> params = new HashMap<>();
@@ -101,6 +103,8 @@ public class LoginActivity extends AppCompatActivity {
                             editor.clear();
                         }
                         editor.apply();
+                        Log.d(TAG, "Login OK uid=" + userId);
+                        startTransferService(userId);
 
                         Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(this, DashboardActivity.class);
@@ -119,5 +123,14 @@ public class LoginActivity extends AppCompatActivity {
         );
 
         Volley.newRequestQueue(this).add(request);
+    }
+    private void startTransferService(int userId) {
+        Log.d(TAG, "Starting TransferMonitorService uid=" + userId);
+        getSharedPreferences("LoginPrefs", MODE_PRIVATE)
+                .edit().putInt("last_logged_user_id", userId).apply();
+
+        Intent s = new Intent(this, TransferMonitorService.class);
+        s.putExtra(TransferMonitorService.EXTRA_USER_ID, userId);
+        androidx.core.content.ContextCompat.startForegroundService(this, s);
     }
 }
