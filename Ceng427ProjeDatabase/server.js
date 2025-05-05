@@ -31,6 +31,31 @@ db.run(
 /*                    AUTH & PROFILE                  */
 /* -------------------------------------------------- */
 
+app.get('/incoming/:user_id', (req, res) => {
+  const { since_id = 0 } = req.query;
+  const sql = `
+    SELECT  t.id,
+            t.amount,
+            t.date,
+            su.full_name AS sender_name
+    FROM    transactions t
+    JOIN    user_profiles su ON su.user_id = t.user_id
+    WHERE   t.target_user_id = ?
+      AND   t.id > ?
+    ORDER BY t.id DESC
+    LIMIT 1
+  `;
+  db.get(sql, [req.params.user_id, since_id], (err, row) => {
+    if (err)   return res.status(500).json({ error: err.message });
+    if (!row)  return res.json({ new: false });
+    res.json({ new: true, transfer: row });
+  });
+});
+
+/* (isteğe bağlı) hız için indeks */
+db.run('CREATE INDEX IF NOT EXISTS idx_transactions_target_id ON transactions(target_user_id)');
+
+
 // Register
 app.post('/register', (req, res) => {
   const { email, password, full_name } = req.body;
