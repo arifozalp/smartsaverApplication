@@ -98,8 +98,18 @@ public class StockDetailActivity extends AppCompatActivity {
         lineChart       = findViewById(R.id.lineChart);
 
         toggleMode.setChecked(true);                 // default BUY
+
+        // ① Artır / azalt
         btnInc.setOnClickListener(v -> changeQuantity(+1));
         btnDec.setOnClickListener(v -> changeQuantity(-1));
+
+        // ② Buy <-> Sell geçişinde miktarı sıfırla
+        toggleMode.setOnCheckedChangeListener((btn, isBuy) -> {
+            quantity = 0;        // hafızadaki miktarı sıfırla
+            changeQuantity(0);   // UI’de “0” & “Total: ₺0.00” güncellensin
+        });
+
+        // ③ Confirm
         btnConfirm.setOnClickListener(v -> confirmTransaction());
     }
 

@@ -104,6 +104,22 @@
                 app:iconGravity="textStart"
                 app:elevation="6dp" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnViewHoldings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="View Holdings"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:layout_marginTop="12dp"
+                android:backgroundTint="#00BCD4"
+                app:cornerRadius="16dp"
+                app:iconPadding="8dp"
+                app:iconGravity="textStart"
+                app:elevation="6dp" />
+
 
         </LinearLayout>
 

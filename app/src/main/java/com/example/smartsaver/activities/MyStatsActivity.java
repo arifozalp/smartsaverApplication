@@ -1,6 +1,8 @@
 package com.example.smartsaver.activities;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,151 +24,202 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 public class MyStatsActivity extends AppCompatActivity {
+
+    /* ---------- UI ---------- */
     private TextView balanceStat, totalInvestment, totalProfit, positiveCount, negativeCount;
-    private Button btnViewTransfers;
+    private Button   btnViewTransfers, btnViewHoldings;
+
+    /* ---------- Data ---------- */
     private int userId;
     private static final String BASE_URL = "http://10.0.2.2:3000";
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    private static class StockItem {
+        String code;
+        double qty, avgPrice, curPrice = 0;
+    }
+    private final ArrayList<StockItem> holdings = new ArrayList<>();
+
+    /* ---------- Periodic refresh (5 s) ---------- */
+    private final Handler refreshHandler = new Handler(Looper.getMainLooper());
+    private final Runnable refreshTask   = new Runnable() {
+        @Override public void run() {
+            fetchPortfolio();
+            refreshHandler.postDelayed(this, 5_000);   // 5 s
+        }
+    };
+
+    /* =================================================================== */
+    @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_stats);
 
-        // View binding
         balanceStat      = findViewById(R.id.balanceStat);
         totalInvestment  = findViewById(R.id.totalInvestment);
         totalProfit      = findViewById(R.id.totalProfit);
         positiveCount    = findViewById(R.id.positiveCount);
         negativeCount    = findViewById(R.id.negativeCount);
         btnViewTransfers = findViewById(R.id.btnViewTransfers);
+        btnViewHoldings  = findViewById(R.id.btnViewHoldings);
 
-        // Intent’ten gelen userId
         userId = getIntent().getIntExtra("user_id", -1);
-        if (userId < 0) {
-            Toast.makeText(this, "Kullanıcı bilgisi bulunamadı", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
+        if (userId < 0) { finish(); return; }
 
-        // Bakiye ve portföyü çek
         fetchBalance();
         fetchPortfolio();
 
-        // Geçmiş transferleri butona bağla
         btnViewTransfers.setOnClickListener(v -> fetchTransactions());
+        btnViewHoldings .setOnClickListener(v -> showHoldingsDialog());
     }
 
-    /** Kullanıcının güncel bakiyesini çeker ve gösterir */
+    /* ---------- Lifecycle ---------- */
+    @Override protected void onResume() {
+        super.onResume();
+        refreshHandler.post(refreshTask);
+    }
+    @Override protected void onPause() {
+        super.onPause();
+        refreshHandler.removeCallbacks(refreshTask);
+    }
+
+    /* ---------- Balance ---------- */
     private void fetchBalance() {
         String url = BASE_URL + "/user_profiles/" + userId;
         JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, url, null,
-                response -> {
+                r -> {
                     try {
-                        double bal = response.getDouble("balance");
-                        balanceStat.setText(
-                                String.format(Locale.getDefault(), "Balance: $%.2f", bal)
-                        );
-                    } catch (JSONException e) {
-                        Toast.makeText(this, "Bakiye verisi okunamadı", Toast.LENGTH_SHORT).show();
-                    }
+                        double bal = r.getDouble("balance");
+                        balanceStat.setText(String.format(Locale.getDefault(),
+                                "Balance: $%.2f", bal));
+                    } catch (JSONException ignored) {}
                 },
-                error -> Toast.makeText(this, "Bakiye alınamadı", Toast.LENGTH_SHORT).show()
-        );
+                e -> Toast.makeText(this,"Bakiye alınamadı",Toast.LENGTH_SHORT).show());
         Volley.newRequestQueue(this).add(req);
     }
 
-    /** Portföy API’sından dönen array’i işleyip ekrana yazar */
+    /* ---------- Portfolio & prices ---------- */
     private void fetchPortfolio() {
         String url = BASE_URL + "/portfolio/" + userId;
         JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, url, null,
-                response -> {
-                    double totalInv = 0, totalProf = 0;
-                    int posCnt = 0, negCnt = 0;
-                    for (int i = 0; i < response.length(); i++) {
-                        JSONObject obj = response.optJSONObject(i);
-                        if (obj == null) continue;
-                        double qty      = obj.optDouble("quantity", 0);
-                        double avgPrice = obj.optDouble("avg_price", 0);
-                        totalInv += qty * avgPrice;
-                        // henüz profit bilgisi yok => 0
-                        double p = 0;
-                        totalProf += p;
-                        if (p >= 0) posCnt++; else negCnt++;
+                arr -> {
+                    holdings.clear();
+                    for (int i = 0; i < arr.length(); i++) {
+                        JSONObject o = arr.optJSONObject(i);
+                        if (o == null) continue;
+                        StockItem s   = new StockItem();
+                        s.code        = o.optString("stock_code","?").toUpperCase(Locale.ROOT);
+                        s.qty         = o.optDouble("quantity",0);
+                        s.avgPrice    = o.optDouble("avg_price",0);
+                        holdings.add(s);
                     }
-                    totalInvestment.setText(
-                            String.format(Locale.getDefault(), "Total Investment: $%.2f", totalInv)
-                    );
-                    totalProfit.setText(
-                            String.format(Locale.getDefault(), "Total Profit: $%.2f", totalProf)
-                    );
-                    positiveCount.setText("Profitable Stocks: " + posCnt);
-                    negativeCount.setText("Loss Stocks: " + negCnt);
+                    if (holdings.isEmpty()) { updateStatsViews(); return; }
+
+                    final int[] done = {0};
+                    for (StockItem s : holdings) {
+                        fetchCurrentPrice(s.code, p -> {
+                            s.curPrice = p;
+                            if (++done[0] == holdings.size()) updateStatsViews();
+                        });
+                    }
                 },
-                error -> Toast.makeText(this, "Portföy yüklenemedi", Toast.LENGTH_SHORT).show()
-        );
+                e -> Toast.makeText(this,"Portföy yüklenemedi",Toast.LENGTH_SHORT).show());
         Volley.newRequestQueue(this).add(req);
     }
 
-    /** Sadece bu kullanıcıya ait transfer geçmişini çeker */
+    private interface PriceCallback { void onPrice(double p); }
+    private void fetchCurrentPrice(String code, PriceCallback cb) {
+        String norm = code.contains(".") ? code.toLowerCase()
+                : code.toLowerCase() + ".us";
+        String url  = "https://stooq.com/q/l/?s=" + norm + "&f=cl";
+        Volley.newRequestQueue(this).add(
+                new com.android.volley.toolbox.StringRequest(url,
+                        csv -> {
+                            try {
+                                String[] p = csv.trim().split(",");
+                                cb.onPrice(Double.parseDouble(p[1]));
+                            } catch (Exception ex) { cb.onPrice(0); }
+                        },
+                        err -> cb.onPrice(0))
+        );
+    }
+
+    private void updateStatsViews() {
+        double totalInv=0, totalProf=0;
+        int posCnt=0, negCnt=0;
+        for (StockItem s : holdings) {
+            double cur   = s.curPrice>0 ? s.curPrice : s.avgPrice;
+            double cost  = s.qty*s.avgPrice;
+            double value = s.qty*cur;
+            double prof  = value - cost;
+            totalInv  += cost;
+            totalProf += prof;
+            if (prof>=0) posCnt++; else negCnt++;
+        }
+        totalInvestment.setText(String.format(Locale.getDefault(),
+                "Total Investment: $%.2f", totalInv));
+        totalProfit.setText(String.format(Locale.getDefault(),
+                "Total Profit: $%.2f", totalProf));
+        positiveCount.setText("Profitable Stocks: " + posCnt);
+        negativeCount.setText("Loss Stocks: " + negCnt);
+    }
+
+    /* ---------- Holdings dialog ---------- */
+    private void showHoldingsDialog() {
+        if (holdings.isEmpty()) { Toast.makeText(this,"No holdings",Toast.LENGTH_SHORT).show(); return; }
+        ArrayList<String> lines = new ArrayList<>();
+        for (StockItem s : holdings) {
+            double cur = s.curPrice>0 ? s.curPrice : s.avgPrice;
+            double prof= (cur - s.avgPrice) * s.qty;
+            lines.add(String.format(Locale.getDefault(),
+                    "%s • %,.0f pcs • Avg $%.2f • Now $%.2f • %s$%.2f",
+                    s.code, s.qty, s.avgPrice, cur,
+                    prof>=0?"+":"-", Math.abs(prof)));
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("Current Holdings")
+                .setItems(lines.toArray(new String[0]), null)
+                .setPositiveButton("Close", null)
+                .show();
+    }
+
+    /* ---------- Transfers ---------- */
     private void fetchTransactions() {
         String url = BASE_URL + "/transactions/" + userId;
         JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, url, null,
                 this::showTransactionsDialog,
-                error -> Toast.makeText(this, "İşlem geçmişi yüklenemedi", Toast.LENGTH_SHORT).show()
-        );
+                e -> Toast.makeText(this,"İşlem geçmişi yüklenemedi",Toast.LENGTH_SHORT).show());
         Volley.newRequestQueue(this).add(req);
     }
 
-    /**
-     * JSON dizisini “Sent/Received” formatında bir dialog’ta gösterir.
-     * Artık hem gönderenin hem de alıcının full_name’lerini kullanıyoruz.
-     */
     private void showTransactionsDialog(JSONArray arr) {
-        ArrayList<JSONObject> transactionList = new ArrayList<>();
-
-        for (int i = 0; i < arr.length(); i++) {
+        ArrayList<JSONObject> list = new ArrayList<>();
+        for (int i=0;i<arr.length();i++) {
             JSONObject o = arr.optJSONObject(i);
-            if (o != null) transactionList.add(o);
+            if (o!=null) list.add(o);
         }
-
-        // 📌 Amount'a göre küçükten büyüğe sırala
-        transactionList.sort((o1, o2) -> {
-            double a1 = o1.optDouble("amount", 0);
-            double a2 = o2.optDouble("amount", 0);
-            return Double.compare(a1, a2);
-        });
+        list.sort((a,b)->Double.compare(a.optDouble("amount",0),
+                b.optDouble("amount",0)));
 
         ArrayList<String> lines = new ArrayList<>();
-
-        for (JSONObject o : transactionList) {
+        for (JSONObject o : list) {
             try {
-                int from          = o.getInt("user_id");
-                int to            = o.getInt("target_user_id");
-                double amt        = o.getDouble("amount");
-                String date       = o.getString("date");
-                String senderName = o.getString("sender_name");
-                String targetName = o.getString("target_name");
-
-                String line;
-                if (from == userId) {
-                    line = String.format(Locale.getDefault(),
-                            "Sent $%.2f to %s on %s", amt, targetName, date);
-                } else {
-                    line = String.format(Locale.getDefault(),
-                            "Received $%.2f from %s on %s", amt, senderName, date);
-                }
-
-                lines.add(line);
+                int from  = o.getInt("user_id");
+                double amt= o.getDouble("amount");
+                String d  = o.getString("date");
+                String sn = o.getString("sender_name");
+                String tn = o.getString("target_name");
+                String l  = (from==userId)
+                        ? String.format(Locale.getDefault(),
+                        "Sent $%.2f to %s on %s", amt, tn, d)
+                        : String.format(Locale.getDefault(),
+                        "Received $%.2f from %s on %s", amt, sn, d);
+                lines.add(l);
             } catch (JSONException ignored) {}
         }
-
         if (lines.isEmpty()) lines.add("No transactions found.");
-
         new AlertDialog.Builder(this)
                 .setTitle("Transfer History")
                 .setItems(lines.toArray(new String[0]), null)
                 .setPositiveButton("Close", null)
                 .show();
     }
-
 }
