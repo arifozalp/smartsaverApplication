@@ -41,7 +41,7 @@ public class LoginActivity extends AppCompatActivity {
         passwordInput = findViewById(R.id.passwordInput);
         loginButton = findViewById(R.id.loginButton);
         registerRedirect = findViewById(R.id.registerRedirect);
-        registerClickable = findViewById(R.id.registerClickable); // EKLENDİ
+        registerClickable = findViewById(R.id.registerClickable);
         rememberCheckbox = findViewById(R.id.rememberCheckbox);
 
         // SharedPreferences ile kaydedilen email varsa yükle
@@ -70,8 +70,12 @@ public class LoginActivity extends AppCompatActivity {
 
         registerClickable.setOnClickListener(v -> {
             startActivity(new Intent(this, RegisterActivity.class));
-            finish();
         });
+    }
+    @Override
+    public void onBackPressed() {
+        finishAffinity();
+        super.onBackPressed();
     }
 
     private void validateLogin(String email, String password) {
@@ -103,7 +107,6 @@ public class LoginActivity extends AppCompatActivity {
                         intent.putExtra("user_id", userId);
                         intent.putExtra("user_email", userEmail);
                         startActivity(intent);
-                        finish();
                     } catch (Exception e) {
                         e.printStackTrace();
                         Toast.makeText(this, "Login parse error", Toast.LENGTH_SHORT).show();

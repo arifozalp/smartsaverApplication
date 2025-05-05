@@ -1,5 +1,7 @@
 package com.example.smartsaver.activities;
 
+import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.LinearLayout;
@@ -78,6 +80,25 @@ public class DashboardActivity extends AppCompatActivity {
             i.putExtra("user_email", userEmail);
             startActivity(i);
         });
+    }
+
+    @SuppressLint("MissingSuperCall")
+    @Override
+    public void onBackPressed() {
+        new AlertDialog.Builder(this)
+                .setTitle("Exit")
+                .setMessage("Are you sure you want to log out?")
+                .setCancelable(false)
+                .setNegativeButton("No", (d, w) -> d.dismiss())
+                .setPositiveButton("Yes", (d, w) -> {
+                    Intent i = new Intent(this, LoginActivity.class);
+                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK |
+                            Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(i);
+                    finish();               // Dashboard'u kapat
+                    // super.onBackPressed();  // İstersen burada çağırabilirsin
+                })
+                .show();
     }
 
     @Override
