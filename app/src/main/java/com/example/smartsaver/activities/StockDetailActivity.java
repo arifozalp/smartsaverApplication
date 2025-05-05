@@ -19,6 +19,7 @@ import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -149,7 +150,7 @@ public class StockDetailActivity extends AppCompatActivity {
                     try {
                         balance = new JSONObject(r).getDouble("balance");
                         userBalanceText.setText(String.format(Locale.getDefault(),
-                                "Balance: ₺%.2f", balance));
+                                "Balance: $%.2f", balance));
                     } catch (Exception ignore) {}
                 }, e -> {}));
 
@@ -172,7 +173,7 @@ public class StockDetailActivity extends AppCompatActivity {
 
         quantityText.setText(String.valueOf(quantity));
         totalText.setText(String.format(Locale.getDefault(),
-                "Total: ₺%.2f", currentPrice * quantity));
+                "Total: $%.2f", currentPrice * quantity));
     }
 
     /* -------------------- Confirmation dialog -------------------------- */
@@ -184,13 +185,17 @@ public class StockDetailActivity extends AppCompatActivity {
         boolean isBuy = toggleMode.isChecked();
         String mode   = isBuy ? "Buy" : "Sell";
 
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
                 .setTitle(mode + " " + quantity + " " + symbol + "?")
-                .setMessage("Are you sure?")
-                .setNegativeButton("Cancel",null)
-                .setPositiveButton("Yes",(d,w)-> sendTradeRequest(isBuy))
+                .setMessage("Are you sure you want to continue?")
+                .setBackground(getDrawable(R.drawable.dialog_bg)) // arka planı oval yapabilirsin
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Yes", (dialog, which) -> sendTradeRequest(isBuy))
                 .show();
+
     }
+
+
 
     /* -------------------- REST: buy/sell ------------------------------- */
     private void sendTradeRequest(boolean isBuy) {
@@ -242,7 +247,7 @@ public class StockDetailActivity extends AppCompatActivity {
                     try{
                         balance = new JSONObject(r).getDouble("balance");
                         userBalanceText.setText(String.format(Locale.getDefault(),
-                                "Balance: ₺%.2f", balance));
+                                "Balance: $%.2f", balance));
                     }catch(Exception ignore){}
 
                     ownedSharesText.setText("Owned: " + ownedShares);
@@ -359,7 +364,7 @@ public class StockDetailActivity extends AppCompatActivity {
             float last = closes.get(0), prev = closes.get(1);
             float pct  = ((last-prev)/prev)*100f;
             stockPrice.setText(String.format(Locale.getDefault(),
-                    "Price: ₺%.2f", last));
+                    "Price: $%.2f", last));
             stockChange.setText(String.format(Locale.getDefault(),
                     "Change: %.2f%%", pct));
         }

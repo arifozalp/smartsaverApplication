@@ -15,6 +15,7 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.smartsaver.R;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -174,12 +175,14 @@ public class MyStatsActivity extends AppCompatActivity {
                     s.code, s.qty, s.avgPrice, cur,
                     prof>=0?"+":"-", Math.abs(prof)));
         }
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this, R.style.CustomAlertDialog)
                 .setTitle("Current Holdings")
                 .setItems(lines.toArray(new String[0]), null)
-                .setPositiveButton("Close", null)
+                .setPositiveButton("CLOSE", null)
                 .show();
+
     }
+
 
     /* ---------- Transfers ---------- */
     private void fetchTransactions() {
@@ -216,10 +219,11 @@ public class MyStatsActivity extends AppCompatActivity {
             } catch (JSONException ignored) {}
         }
         if (lines.isEmpty()) lines.add("No transactions found.");
-        new AlertDialog.Builder(this)
-                .setTitle("Transfer History")
+        new MaterialAlertDialogBuilder(this, R.style.CustomAlertDialog)
+                .setTitle("Current Holdings")
                 .setItems(lines.toArray(new String[0]), null)
-                .setPositiveButton("Close", null)
+                .setPositiveButton("CLOSE", null)
                 .show();
+
     }
 }
